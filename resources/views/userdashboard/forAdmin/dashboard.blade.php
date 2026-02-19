@@ -1,6 +1,12 @@
 <x-layouts::app :title="__('Dashboard')">
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
+    <x-slot:header>
+            <flux:sidebar.header>     
+                    Integrated E-Service Management System
+            </flux:sidebar.header>
+    </x-slot:header>
+
     <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl p-0">
         
         <div class="grid auto-rows-min gap-6 md:grid-cols-3">

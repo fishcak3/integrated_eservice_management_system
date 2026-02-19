@@ -61,11 +61,11 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <flux:label>Document Type</flux:label>
-                            <div class="font-medium">{{ $documentRequest->type->name }}</div>
+                            <div class="font-medium">{{ $documentRequest->documentType->name }}</div>
                         </div>
                         <div>
                             <flux:label>Fee</flux:label>
-                            <div class="font-medium">₱{{ number_format($documentRequest->type->fee, 2) }}</div>
+                            <div class="font-medium">₱{{ number_format($documentRequest->documentType->fee, 2) }}</div>
                         </div>
                         <div>
                             <flux:label>Date Requested</flux:label>

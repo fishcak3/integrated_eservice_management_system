@@ -93,4 +93,22 @@ class User extends Authenticatable
         return $this->role === $role;
     }
 
+    public function getProfilePhotoUrlAttribute()
+    {
+        return $this->profile_photo 
+            ? asset('storage/' . $this->profile_photo) 
+            : null;
+    }
+
+    public function getDisplayNameAttribute()
+    {
+        // If user has a linked resident profile, format their name
+        if ($this->resident) {
+            return ucwords($this->resident->lname . ', ' . $this->resident->fname);
+        }
+
+        // Otherwise return the default name
+        return $this->name;
+    }
+
 }

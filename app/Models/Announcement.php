@@ -12,33 +12,54 @@ class Announcement extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'title',
-        'slug',
-        'content',
-        'cover_image',
-        'status',
-        'priority',
-        'is_pinned',
-        'published_at',
-        'user_id',
+        'title', 
+        'slug', 
+        'content', 
+        'cover_image', 
+        'status', 
+        'publish_at', 
+        'expires_at', 
+        'user_id'
     ];
 
-    // Ensure dates are Carbon instances
     protected $casts = [
-        'published_at' => 'datetime',
-        'is_pinned' => 'boolean',
+        'publish_at' => 'datetime',
+        'expires_at' => 'datetime',
     ];
 
-    // Automatically generate slug when creating an announcement
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
     protected static function boot()
     {
         parent::boot();
 
         static::creating(function ($announcement) {
             if (empty($announcement->slug)) {
-                $announcement->slug = Str::slug($announcement->title) . '-' . Str::random(4);
+                $announcement->slug = Str::slug($announcement->title) . '-' . uniqid(); 
             }
         });
+        
+        static::updating(function ($announcement) {
+            if ($announcement->isDirty('title') && empty($announcement->slug)) {
+                 $announcement->slug = Str::slug($announcement->title) . '-' . uniqid();
+            }
+        });
+    }
+
+    // Helper: Is this currently visible to residents?
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'published')
+                     ->where('publish_at', '<=', now())
+                     ->where(fn($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()));
+    }
+    
+    public function getImageUrlAttribute()
+    {
+        return $this->cover_image ? asset('storage/' . $this->cover_image) : null;
     }
 
     // Relationship: Who created the announcement?
@@ -47,10 +68,4 @@ class Announcement extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    // Scope: Helper to only get visible announcements for residents
-    public function scopePublished($query)
-    {
-        return $query->where('status', 'published')
-                     ->where('published_at', '<=', now());
-    }
 }

@@ -9,7 +9,8 @@
     </x-slot>
 
     {{-- MAIN CONTENT --}}
-    <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl p-0">
+    {{-- Removed 'h-full' here so the page can grow and scroll --}}
+    <div class="flex w-full flex-1 flex-col gap-6 rounded-xl p-0">
         
         {{-- Page Header & Actions --}}
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -35,20 +36,26 @@
                 {{-- Card Header --}}
                 <div class="space-y-2">
                     <div class="flex items-center gap-2 mb-2">
-                         @if($announcement->priority === 'emergency')
-                            <flux:badge color="red">Emergency</flux:badge>
-                        @elseif($announcement->priority === 'high')
-                            <flux:badge color="orange">Important</flux:badge>
-                        @endif
+                         {{-- 1. Status Badge --}}
+                         @php
+                            $isExpired = $announcement->expires_at && $announcement->expires_at->isPast();
+                            $badgeColor = $isExpired ? 'red' : ($announcement->status === 'published' ? 'green' : 'zinc');
+                            $statusLabel = $isExpired ? 'Expired' : ucfirst($announcement->status);
+                         @endphp
+                         
+                         <flux:badge :color="$badgeColor">{{ $statusLabel }}</flux:badge>
 
-                        <flux:badge color="zinc" inset="top bottom">{{ $announcement->created_at->format('M d, Y') }}</flux:badge>
+                        {{-- 2. Publish Date --}}
+                        <flux:badge color="zinc" inset="top bottom">
+                            {{ $announcement->publish_at ? $announcement->publish_at->format('M d, Y') : $announcement->created_at->format('M d, Y') }}
+                        </flux:badge>
                     </div>
 
-                    {{-- Updated to Flux Heading/Subheading --}}
+                    {{-- Heading --}}
                     <div>
                         <flux:heading size="xl" level="1">{{ $announcement->title }}</flux:heading>
                         <flux:subheading>
-                            Posted by {{ $announcement->author->name ?? 'Admin' }}
+                            Posted by {{ $announcement->author->name ?? 'Barangay Official' }} 
                         </flux:subheading>
                     </div>
                 </div>
@@ -63,8 +70,15 @@
 
             {{-- Footer / Actions --}}
             <div class="bg-zinc-50 dark:bg-zinc-900/50 p-4 flex justify-between items-center border-t border-zinc-200 dark:border-zinc-700">
-                <span class="text-xs text-zinc-500">Status: {{ ucfirst($announcement->status) }}</span>
-                <flux:button href="{{ route('announcements.edit', $announcement->id) }}" size="sm" icon="pencil-square">
+                <div class="flex flex-col">
+                    @if($announcement->expires_at)
+                        <span class="text-xs text-zinc-500">Expires: {{ $announcement->expires_at->format('M d, Y h:i A') }}</span>
+                    @else
+                        <span class="text-xs text-zinc-500">No expiration date</span>
+                    @endif
+                </div>
+
+                <flux:button href="{{ route('announcements.edit', $announcement) }}" size="sm" icon="pencil-square">
                     Edit Announcement
                 </flux:button>
             </div>

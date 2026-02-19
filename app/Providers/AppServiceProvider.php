@@ -5,6 +5,8 @@ namespace App\Providers;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\View;
+use App\Models\BrgySetting;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -21,9 +23,19 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void
+public function boot(): void
     {
         $this->configureDefaults();
+
+        try {
+            $logo = BrgySetting::get('barangay_logo');
+            $brgyName = BrgySetting::get('barangay_name') ?? 'Barangay Portal';
+            
+            View::share('global_logo', $logo);
+            View::share('global_brgy_name', $brgyName);
+        } catch (\Exception $e) {
+
+        }
     }
 
     /**

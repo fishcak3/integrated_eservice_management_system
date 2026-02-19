@@ -1,14 +1,17 @@
-<div class="flex items-start max-md:flex-col">
-    <div class="me-10 w-full pb-4 md:w-[220px]">
-        <flux:navlist aria-label="{{ __('Settings') }}">
-            <flux:navlist.item :href="route('profile.edit')" wire:navigate>{{ __('Profile') }}</flux:navlist.item>
-            <flux:navlist.item :href="route('user-password.edit')" wire:navigate>{{ __('Password') }}</flux:navlist.item>
+<x-slot:header>
+    <flux:Navbar scrollable>
+        <flux:navbar.item :href="route('profile.edit')" icon="user" wire:navigate>{{ __('Profile') }}</flux:navbar.item>
+            <flux:navbar.item :href="route('user-password.edit')" icon="key" wire:navigate>{{ __('Password') }}</flux:navbar.item>
             @if (Laravel\Fortify\Features::canManageTwoFactorAuthentication())
-                <flux:navlist.item :href="route('two-factor.show')" wire:navigate>{{ __('Two-Factor Auth') }}</flux:navlist.item>
+                <flux:navbar.item :href="route('two-factor.show')" icon="lock-closed" wire:navigate>{{ __('Two-Factor Auth') }}</flux:navbar.item>
             @endif
-            <flux:navlist.item :href="route('appearance.edit')" wire:navigate>{{ __('Appearance') }}</flux:navlist.item>
-        </flux:navlist>
-    </div>
+            <flux:navbar.item :href="route('appearance.edit')" icon="paint-brush" wire:navigate>{{ __('Appearance') }}</flux:navbar.item>
+    </flux:Navbar>
+</x-slot:header>
+
+
+<div class="flex items-start max-md:flex-col">
+
 
     <flux:separator class="md:hidden" />
 

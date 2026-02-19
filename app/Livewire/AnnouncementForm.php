@@ -17,67 +17,73 @@ class AnnouncementForm extends Component
     // Form Fields
     public $title = '';
     public $content = '';
-    public $status = 'draft';
-    public $priority = 'normal';
-    public $is_pinned = false;
+    public $status = 'published'; // Default to published
+    
+    // Date Fields (New)
+    public $publish_at;
+    public $expires_at;
     
     // Image Handling
     public $cover_image; 
     public $existing_image; 
 
-    public function mount($announcement = null)
+    public function mount(?Announcement $announcement = null)
     {
-        if ($announcement) {
+        if ($announcement && $announcement->exists) {
             $this->announcement = $announcement;
             $this->title = $announcement->title;
             $this->content = $announcement->content;
             $this->status = $announcement->status;
-            $this->priority = $announcement->priority;
-            $this->is_pinned = (bool) $announcement->is_pinned;
+            
+            // Format dates for datetime-local input (Y-m-d\TH:i)
+            $this->publish_at = $announcement->publish_at?->format('Y-m-d\TH:i');
+            $this->expires_at = $announcement->expires_at?->format('Y-m-d\TH:i');
+            
             $this->existing_image = $announcement->cover_image;
         }
     }
 
     public function save()
     {
-        $this->validate([
+        $validated = $this->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
-            'status' => 'required|in:draft,published,archived',
-            'priority' => 'required|in:normal,high,emergency',
+            'status' => 'required|in:published,archived',
+            'publish_at' => 'nullable|date',
+            'expires_at' => 'nullable|date|after:publish_at',
             'cover_image' => 'nullable|image|max:10240', // 10MB Max
-            'is_pinned' => 'boolean',
         ]);
 
+        // Base Data
         $data = [
             'title' => $this->title,
             'content' => $this->content,
             'status' => $this->status,
-            'priority' => $this->priority,
-            'is_pinned' => $this->is_pinned,
+            'publish_at' => $this->publish_at ?: null,
+            'expires_at' => $this->expires_at ?: null,
             'user_id' => auth()->id(),
         ];
 
+        // Handle Image Upload
         if ($this->cover_image) {
+            // Delete old image if updating
             if ($this->existing_image) {
                 Storage::disk('public')->delete($this->existing_image);
             }
             $data['cover_image'] = $this->cover_image->store('announcements', 'public');
         }
 
+        // Create or Update
         if ($this->announcement) {
-            if ($data['status'] === 'published' && $this->announcement->status !== 'published') {
-                $data['published_at'] = now();
-            }
             $this->announcement->update($data);
-            session()->flash('success', 'Announcement updated successfully.');
+            $message = 'Announcement updated successfully.';
         } else {
-            $data['slug'] = Str::slug($this->title) . '-' . Str::random(4);
-            $data['published_at'] = $data['status'] === 'published' ? now() : null;
+            // Slug is handled by the Model boot() method, no need to add here
             Announcement::create($data);
-            session()->flash('success', 'Announcement created successfully.');
+            $message = 'Announcement created successfully.';
         }
 
+        session()->flash('success', $message);
         return redirect()->route('announcements.index');
     }
 
@@ -88,14 +94,15 @@ class AnnouncementForm extends Component
     
     public function removeExistingImage()
     {
-        $this->existing_image = null;
-        if($this->announcement) {
+        if($this->announcement && $this->existing_image) {
+            Storage::disk('public')->delete($this->existing_image);
             $this->announcement->update(['cover_image' => null]);
+            $this->existing_image = null;
         }
     }
 
     public function render()
     {
-        return view('livewire.announcement-form');
+        return view('livewire.announcement-form'); // Ensure this view exists
     }
 }

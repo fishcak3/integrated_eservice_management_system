@@ -25,7 +25,7 @@ class CreateNewUser implements CreatesNewUsers
         Validator::make($input, [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'middle_name' => ['required', 'string', 'max:255'],
+            'middle_name' => ['nullable', 'string', 'max:255'], // Changed to nullable just in case
             'email' => [
                 'required',
                 'string',
@@ -37,25 +37,40 @@ class CreateNewUser implements CreatesNewUsers
         ])->validate();
 
         // 2. Search for the resident in the database
-        // We match form inputs (first_name) to database columns (fname)
         $resident = Resident::where('fname', $input['first_name'])
                     ->where('lname', $input['last_name'])
-                    ->where('mname', $input['middle_name'])
+                    // Use 'like' or exact match depending on your strictness. 
+                    // Using optional input logic for middle name:
+                    ->when(!empty($input['middle_name']), function($q) use ($input) {
+                        return $q->where('mname', $input['middle_name']);
+                    })
                     ->first();
 
         // 3. If NO resident is found, stop and show error
         if (! $resident) {
             throw ValidationException::withMessages([
-                'first_name' => ['Name not found! You need to register at barangay as resident!'],
+                'first_name' => ['Name not found in barangay records! You need to be a resident to register.'],
             ]);
         }
+
+        // ---------------------------------------------------------
+        // 3.5 NEW CHECK: Check if this Resident already has an account
+        // ---------------------------------------------------------
+        $existingAccount = User::where('resident_id', $resident->id)->first();
+
+        if ($existingAccount) {
+            throw ValidationException::withMessages([
+                'email' => ['This resident already has a registered account. Please log in instead.'],
+            ]);
+        }
+        // ---------------------------------------------------------
 
         // 4. Create the User (Linked to the Resident)
         return User::create([
             'email' => $input['email'],
             'password' => Hash::make($input['password']),
-            'resident_id' => $resident->id, // Link the ID we found
-            'role' => 'resident', // Default role
+            'resident_id' => $resident->id, 
+            'role' => 'resident',
         ]);
     }
 }

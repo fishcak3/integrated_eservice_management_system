@@ -7,33 +7,12 @@
 
     <body class="min-h-screen bg-white dark:bg-zinc-800">
 
-        {{-- LOGIC: Determine Dashboard Route & User Name --}}
-        @php
-            $user = auth()->user();
-            
-            // Set the home link based on role
-            $dashboardRoute = match($user->role) {
-                'admin' => route('admin.dashboard'),
-                'official' => route('official.dashboard'),
-                'resident' => route('resident.dashboard'),
-                'default' => route('dashboard'),
-            };
-
-            // Format the user's name
-            $displayName = $user->resident 
-                ? ucwords($user->resident->lname . ', ' . $user->resident->fname) 
-                : $user->name;
-
-            $logo = \App\Models\BrgySetting::get('barangay_logo');
-            $brgyName = \App\Models\BrgySetting::get('barangay_name') ?? 'Barangay Portal';
-        @endphp
-
         <flux:sidebar sticky collapsible class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.header>
 
-                <a href="{{ $dashboardRoute }}" wire:navigate class="flex items-center gap-2 px-2">
-                    @if($logo)
-                        <img src="{{ asset('storage/' . $logo) }}" 
+                <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center gap-2 px-2">
+                    @if($global_logo ?? false) 
+                        <img src="{{ asset('storage/' . $global_logo) }}" 
                             alt="Logo" 
                             class="h-8 w-8 rounded-full object-cover border border-zinc-200 dark:border-zinc-700 shrink-0">
                     @else
@@ -41,7 +20,7 @@
                     @endif
 
                     <span class="font-bold text-sm truncate dark:text-white in-data-flux-sidebar-collapsed-desktop:hidden">
-                        {{ $brgyName }} Portal
+                        {{ $global_brgy_name ?? 'Barangay Portal' }}
                     </span>
                 </a>
 
@@ -139,7 +118,12 @@
 
             <flux:sidebar.spacer />
 
-            <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->resident?->full_name ?? auth()->user()->name" />
+            <x-desktop-user-menu 
+                class="hidden lg:block" 
+                :name="auth()->user()->resident?->full_name ?? auth()->user()->name" 
+                :avatar="auth()->user()->profile_photo_url"
+                :initials="auth()->user()->initials()"
+            />
         </flux:sidebar>
 
         <flux:header class="bg-white lg:bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700 gap-4">
@@ -155,16 +139,25 @@
             <flux:button x-data x-on:click="$flux.dark = ! $flux.dark" icon="moon" variant="subtle" aria-label="Toggle dark mode" />
 
             {{-- Mobile User Menu --}}
-            {{-- Added 'shrink-0' so the avatar never gets squished --}}
             <div class="lg:hidden flex shrink-0">
                 <flux:dropdown position="top" align="end">
-                    <flux:profile :initials="auth()->user()->initials()" icon-trailing="chevron-down" />
+                    <flux:profile 
+                        :avatar="auth()->user()->profile_photo_url"
+                        :initials="auth()->user()->initials()" 
+                        icon-trailing="chevron-down" 
+                    />
                     
                     <flux:menu>
                         <flux:menu.radio.group>
                             <div class="p-0 text-sm font-normal">
                                 <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-                                    <flux:avatar :name="auth()->user()->name" :initials="auth()->user()->initials()" />
+                                    <flux:avatar 
+                                        :src="auth()->user()->profile_photo_url"
+                                        :name="auth()->user()->name" 
+                                        :initials="auth()->user()->initials()" 
+                                    />
+                                    
+                                    
                                     <div class="grid flex-1 text-start text-sm leading-tight">
                                         <flux:heading class="truncate">{{ Auth::user()->resident?->formatted_name ?? Auth::user()->email }}</flux:heading>
                                         <flux:text class="truncate">{{ auth()->user()->email }}</flux:text>
@@ -176,7 +169,7 @@
                         <flux:menu.separator />
 
                         <flux:menu.radio.group>
-                            <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>{{ __('Settings') }}</flux:menu.item>
+                            <flux:menu.item :href="route('profile.edit')" icon="user" wire:navigate>{{ __('Profile') }}</flux:menu.item>
                         </flux:menu.radio.group>
 
                         <flux:menu.separator />
@@ -193,10 +186,10 @@
         </flux:header>
 
         {{-- Main Content Slot --}}
-        <flux:main>
+        <flux:main class="flex h-[calc(100dvh-4rem)] w-full flex-1 flex-col gap-6 p-6 lg:p-8">
             {{ $slot }}
 
-            @include('partials.footer')
+            @include('partials.footerDashboard')
         </flux:main>
 
         @fluxScripts

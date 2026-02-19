@@ -5,6 +5,7 @@ namespace App\Http\Controllers\resident;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\DocumentRequest;
+use App\Models\ComplaintRequest;
 use App\Models\DocumentType;
 use App\Models\RequestAttachment;
 use Illuminate\Support\Facades\Auth;
@@ -13,67 +14,85 @@ use Illuminate\Support\Facades\Storage;
 
 class ResidentRequestController extends Controller
 {
-    /**
-     * Display a listing of the resident's requests.
-     */
-    public function index(Request $request)
+    private function ensureVerified()
     {
-        // Fetch requests belonging to the logged-in user
-        // Filter by tracking code if 'search' is present
+        if (Auth::user()->verification_status !== 'verified') {
+            abort(redirect()->route('profile.edit') // Assuming this is your settings route
+                ->with('error', 'Restricted: You must verify your account with a valid ID before requesting documents.'));
+        }
+    }
+
+public function index(Request $request)
+    {
+        // 1. Fetch requests
         $documentRequests = DocumentRequest::query()
             ->where('user_id', Auth::id())
             ->when($request->search, function ($query, $search) {
                 $query->where('tracking_code', 'like', "%{$search}%");
             })
-            ->with(['type']) // Eager load the document type
+            ->with(['documentType', 'attachments'])
             ->latest()
             ->paginate(10);
 
-        return view('userdashboard.forResident.requests.index', compact('documentRequests'));
+        // 2. Get Counts for the Header Badges
+        $pendingDocs = DocumentRequest::where('user_id', Auth::id())
+            ->where('status', 'pending')
+            ->count();
+
+        // 3. Get Complaint Counts (Assuming you have a Complaint model)
+        // If you don't have a Complaint model yet, just set this to 0
+        $pendingComplaints = ComplaintRequest::where('complainant_id', Auth::id())
+             ->where('status', 'pending')
+             ->count();
+
+        $complaints = \App\Models\ComplaintRequest::query()
+        ->where('complainant_id', Auth::id()) // Ensure this matches your column name
+        ->when($request->search, function ($query, $search) {
+            $query->where('case_number', 'like', "%{$search}%")
+                  ->orWhere('respondent_name', 'like', "%{$search}%");
+        })
+        ->latest()
+        ->paginate(10);
+
+        return view('userdashboard.forResident.requests.index', compact('documentRequests', 'pendingDocs', 'pendingComplaints', 'complaints'));
     }
 
-    /**
-     * Show the form for creating a new request.
-     */
     public function create()
     {
-        // Get all available document types for the dropdown
-        $documentTypes = DocumentType::all(); // You might want to filter active types here
+        // 1. BLOCK: Check Verification Status
+        $this->ensureVerified();
+
+        $documentTypes = DocumentType::where('is_active', true)->get();
 
         return view('userdashboard.forResident.requests.request_document.create', compact('documentTypes'));
     }
 
-    /**
-     * Store a newly created request in storage.
-     */
     public function store(Request $request)
     {
+        // 1. BLOCK: Check Verification Status (Double check for security)
+        $this->ensureVerified();
+
         $validated = $request->validate([
             'document_type_id' => 'required|exists:document_types,id',
             'purpose'          => 'required|string|max:255',
-            'attachments.*'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120', // Max 5MB per file
+            'attachments.*'    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
-        // 1. Generate a unique Tracking Code (e.g., DOC-20231025-ABCD)
         $trackingCode = 'DOC-' . now()->format('Ymd') . '-' . strtoupper(Str::random(4));
 
-        // 2. Create the Request Record
         $documentRequest = DocumentRequest::create([
             'tracking_code'     => $trackingCode,
             'user_id'           => Auth::id(),
-            // We autofill these from the auth user to keep a snapshot record
             'requestor_name'    => Auth::user()->name, 
-            'requestor_phone'   => Auth::user()->phone_number ?? null, // Assuming phone is in User or Resident model
-            'requestor_address' => Auth::user()->address ?? null,      // Assuming address is in User or Resident model
+            'requestor_phone'   => Auth::user()->phone_number ?? null,
+            'requestor_address' => Auth::user()->address ?? null,     
             'document_type_id'  => $validated['document_type_id'],
             'purpose'           => $validated['purpose'],
             'status'            => 'pending',
         ]);
 
-        // 3. Handle File Uploads (if any)
         if ($request->hasFile('attachments')) {
             foreach ($request->file('attachments') as $file) {
-                // Store in 'storage/app/public/request_attachments'
                 $path = $file->store('request_attachments', 'public');
 
                 RequestAttachment::create([
@@ -94,8 +113,7 @@ class ResidentRequestController extends Controller
      */
     public function show($id)
     {
-        // Find request or fail, ensuring it belongs to the current user
-        $request = DocumentRequest::with(['type', 'attachments'])
+        $request = DocumentRequest::with(['documentType', 'attachments'])
             ->where('user_id', Auth::id())
             ->findOrFail($id);
 
@@ -107,7 +125,7 @@ class ResidentRequestController extends Controller
     /**
      * Show the form for editing the specified request.
      */
-public function edit($id)
+    public function edit($id)
     {
         // Fetch the model using a distinct name
         $documentRequest = DocumentRequest::where('user_id', Auth::id())->findOrFail($id);
@@ -153,7 +171,7 @@ public function edit($id)
             foreach ($httpRequest->delete_attachments as $attachmentId) {
                 $attachment = $documentRequest->attachments()->find($attachmentId);
                 if ($attachment) {
-                    \Illuminate\Support\Facades\Storage::delete($attachment->file_path); 
+                    Storage::delete($attachment->file_path); 
                     $attachment->delete(); 
                 }
             }
@@ -183,17 +201,14 @@ public function edit($id)
     {
         $documentRequest = DocumentRequest::where('user_id', Auth::id())->findOrFail($id);
 
-        // Only allow cancellation if pending
         if ($documentRequest->status !== 'pending') {
             return redirect()->back()->with('error', 'You cannot cancel a request that has already been processed.');
         }
 
-        // Delete associated files from storage
         foreach ($documentRequest->attachments as $attachment) {
             Storage::disk('public')->delete($attachment->file_path);
         }
 
-        // Delete the record (Cascade will delete attachment DB rows)
         $documentRequest->delete();
 
         return redirect()->route('resident.requests.index')

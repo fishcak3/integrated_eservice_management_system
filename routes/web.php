@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\WelcomeController;
+
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\ResidentsController;
@@ -16,9 +19,19 @@ use App\Http\Controllers\Resident\ResidentDashboardController;
 use App\Http\Controllers\Resident\ResidentRequestController;
 
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
+Route::get('/announcements/{announcement}', [WelcomeController::class, 'showAnnouncement'])->name('public.announcements.show');
+
+Route::get('/dashboard', function () {
+    $user = Auth::user();
+
+    return match($user->role) {
+        'admin'    => redirect()->route('admin.dashboard'),
+        'resident' => redirect()->route('resident.dashboard'),
+        // 'official' => redirect()->route('official.dashboard'), 
+        default    => abort(403, 'Unauthorized action.'),
+    };
+})->middleware(['auth', 'verified'])->name('dashboard');
 
 // Admins Routes
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
@@ -56,6 +69,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::patch('/complaints/{id}/status', [RequestController::class, 'complaintUpdateStatus'])->name('complaints.update-status');
 
     Route::resource('announcements', AnnouncementController::class)->names('announcements');
+    Route::get('/announcements/{announcement}', [AnnouncementController::class, 'show'])->name('announcements.show');
+    Route::get('/announcements/{announcement}/edit', [AnnouncementController::class, 'edit'])->name('announcements.edit');
 
     Route::get('/systemSettings', [BrgySettingsController::class, 'index'])->name('settings.index');
     Route::post('/systemSettings', [BrgySettingsController::class, 'update'])->name('settings.update'); // Add this

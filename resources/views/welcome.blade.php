@@ -3,256 +3,411 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Barangay Aliaga | E-Services</title>
+    <title>Barangay Aliaga | IESMS</title>
 
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#16a34a', // Green-600
+                        'primary-foreground': '#ffffff',
+                    }
+                }
+            }
+        }
+    </script>
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @fluxStyles
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Smooth transition for the slider */
+        .slider-wrapper {
+            transition: transform 0.5s ease-in-out;
+        }
+        /* Hide scrollbar for cleaner look */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-200 antialiased font-sans">
+<body class="antialiased min-h-screen bg-gradient-to-br from-green-50 to-yellow-50 text-slate-800 font-sans">
 
-    {{-- 1. HEADER --}}
-    <flux:header container class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 py-4 sticky top-0 z-50">
-        <div class="flex items-center gap-3">
-            <div class="size-10 bg-blue-900 rounded-full flex items-center justify-center text-white font-bold text-xs">
-                LOGO
-            </div>
-            <div class="leading-tight">
-                <div class="font-bold text-lg tracking-tight text-zinc-900 dark:text-white uppercase">Barangay Aliaga</div>
-                <div class="text-xs text-zinc-500 font-medium uppercase tracking-wider">E-Services Portal</div>
-            </div>
-        </div>
+    <header class="bg-white shadow-sm border-b sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-200 border border-gray-300">
+                        @if($global_logo ?? false) 
+                            <img src="{{ asset('storage/' . $global_logo) }}" alt="Logo" class="w-full h-full object-cover">
+                        @else
+                            <div class="flex items-center justify-center h-full text-gray-400">
+                                <i data-lucide="image" class="w-6 h-6"></i>
+                            </div>
+                        @endif
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-gray-900 leading-tight text-lg">Barangay {{ $global_brgy_name ?? 'Portal' }}</h1>
+                        <p class="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">IESMS Portal</p>
+                    </div>
+                </div>
 
-        <flux:spacer />
-
-        <flux:navbar class="hidden md:flex gap-4">
-            <flux:navbar.item href="#mission">Our Mission</flux:navbar.item>
-            <flux:navbar.item href="#services">Services</flux:navbar.item>
-            <flux:navbar.item href="#process">How It Works</flux:navbar.item>
-        </flux:navbar>
-
-        <flux:spacer />
-
-        <div class="flex gap-2">
-            @if (Route::has('login'))
-                @auth
-                    {{-- Logic to redirect to specific dashboard based on role would be handled by the route/controller --}}
-                    <flux:button href="{{ url('/dashboard') }}" variant="filled">
-                        Dashboard
-                    </flux:button>
-                @else
-                    <flux:button href="{{ route('login') }}" variant="ghost">Log In</flux:button>
-                    @if (Route::has('register'))
-                        <flux:button href="{{ route('register') }}" class="bg-blue-900 hover:bg-blue-800 text-white border-none">
-                            Register
-                        </flux:button>
+                <div class="flex items-center space-x-3">
+                    @if (Route::has('login'))
+                        @auth
+                            <a href="{{ route('dashboard') }}" class="px-4 py-2 bg-primary text-white rounded-md text-sm font-medium hover:bg-green-700 transition">Dashboard</a>
+                        @else
+                            <a href="{{ route('login') }}" class="text-sm font-medium text-gray-700 hover:text-primary transition px-3 py-2">Log in</a>
+                            <a href="{{ route('register') }}" class="sm:inline-flex px-4 py-2 bg-primary text-white rounded-md text-sm font-medium hover:bg-green-700 transition shadow-sm">Register</a>
+                        @endauth
                     @endif
-                @endauth
-            @endif
+                </div>
+            </div>
         </div>
-    </flux:header>
+    </header>
 
-    {{-- 2. HERO SECTION --}}
-    <div class="relative bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
-        <div class="absolute inset-0 bg-[url('https://fluxui.dev/img/grid.svg')] bg-center opacity-30"></div>
-        
-        <flux:main container class="relative py-24 text-center">
-            <div class="mx-auto max-w-4xl space-y-8">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs font-semibold uppercase tracking-wider border border-blue-100 dark:border-blue-800">
-                    <span class="size-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    System Online 24/7
-                </div>
-
-                <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-zinc-900 dark:text-white">
-                    Integrated E-Services <br> Management System
-                </h1>
-                
-                <p class="text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-                    Efficient, transparent, and accessible government services for all residents.
-                </p>
-
-                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-                    <flux:button href="{{ route('login') }}" variant="primary" class="bg-blue-900 hover:bg-blue-800 border-none w-full sm:w-auto min-w-[160px] h-12 text-base">
-                        Access Services
-                    </flux:button>
-                    <flux:button href="#mission" variant="outline" class="w-full sm:w-auto min-w-[160px] h-12 text-base">
-                        Learn More
-                    </flux:button>
-                </div>
-            </div>
-        </flux:main>
-    </div>
-
-    {{-- 3. MISSION SECTION (From React Code) --}}
-    <div id="mission" class="bg-zinc-50 dark:bg-zinc-950 py-20 border-b border-zinc-200 dark:border-zinc-800">
-        <flux:main container>
-            <div class="grid md:grid-cols-2 gap-12 items-center">
-                <div>
-                    <flux:heading level="2" size="xl" class="font-bold text-zinc-900 mb-6">Our Mission</flux:heading>
-                    <div class="prose prose-lg text-zinc-600 dark:text-zinc-400">
-                        <p>
-                            The Integrated E-Services Management System aims to provide efficient, transparent, 
-                            and accessible government services to all residents of Barangay Aliaga. 
-                        </p>
-                        <p class="mt-4">
-                            Our digital platform ensures that essential services are available 24/7, reducing wait times and 
-                            improving service delivery. We are committed to digital transformation that empowers our community.
-                        </p>
+    <section class="relative py-16 sm:py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="text-center lg:text-left z-10">
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-6 text-gray-900 tracking-tight leading-tight">
+                        Integrated E-Services <span class="text-primary">Management System</span>
+                    </h1>
+                    <p class="text-lg sm:text-xl text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0">
+                        "Pagkakaisa sa Paglilingkod, Progreso sa Pamayanan" — Your gateway to efficient, transparent, and accessible barangay services.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                        <a href="/login" class="inline-flex justify-center items-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-green-700 transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            Access Services
+                            <i data-lucide="arrow-right" class="ml-2 w-5 h-5"></i>
+                        </a>
+                        <a href="#announcements" class="inline-flex justify-center items-center px-8 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition shadow-sm">
+                            View News
+                        </a>
                     </div>
                 </div>
-                <div class="bg-white dark:bg-zinc-900 p-8 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
-                            <flux:icon.clock class="mx-auto text-blue-600 mb-2" variant="solid" />
-                            <div class="font-semibold">24/7 Access</div>
-                        </div>
-                        <div class="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg text-center">
-                            <flux:icon.check-badge class="mx-auto text-emerald-600 mb-2" variant="solid" />
-                            <div class="font-semibold">Transparent</div>
-                        </div>
-                        <div class="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-center">
-                            <flux:icon.bolt class="mx-auto text-purple-600 mb-2" variant="solid" />
-                            <div class="font-semibold">Efficient</div>
-                        </div>
-                        <div class="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg text-center">
-                            <flux:icon.users class="mx-auto text-orange-600 mb-2" variant="solid" />
-                            <div class="font-semibold">Accessible</div>
-                        </div>
-                    </div>
+                <div class="relative w-full h-[300px] sm:h-[400px] lg:h-[450px] rounded-2xl shadow-2xl overflow-hidden border-4 border-white transform rotate-1 hover:rotate-0 transition duration-500">
+                    <iframe 
+                        class="absolute inset-0 w-full h-full"
+                        frameborder="0" 
+                        scrolling="no" 
+                        marginheight="0" 
+                        marginwidth="0" 
+                        title="Map of Barangay Aliaga"
+                        src="https://maps.google.com/maps?q=Aliaga%2C+Malasiqui%2C+Pangasinan&t=&z=14&ie=UTF8&iwloc=&output=embed"
+                        loading="lazy">
+                    </iframe>
                 </div>
             </div>
-        </flux:main>
-    </div>
+        </div>
+    </section>
 
-    {{-- 4. AVAILABLE SERVICES (From React Code List) --}}
-    <div id="services" class="bg-white dark:bg-zinc-900 py-20 border-b border-zinc-200 dark:border-zinc-800">
-        <flux:main container>
+    <section class="py-16 bg-white relative">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="text-center mb-16">
-                <flux:heading level="2" size="xl" class="font-bold text-zinc-900">Available Services</flux:heading>
-                <flux:subheading>Request documents and stay informed directly through the portal</flux:subheading>
+                <span class="text-primary font-semibold tracking-wider uppercase text-sm">What we offer</span>
+                <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">Available Services</h2>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {{-- Service Items mapped from React Code --}}
-                @php
-                    $services = [
-                        ['title' => 'Barangay Clearance', 'icon' => 'document-check', 'desc' => 'Request official clearance for employment or requirements.'],
-                        ['title' => 'Certificate of Indigency', 'icon' => 'heart', 'desc' => 'Certification for medical, financial, or scholarship assistance.'],
-                        ['title' => 'Certificate of Residency', 'icon' => 'home', 'desc' => 'Proof of residency for postal ID, bank opening, etc.'],
-                        ['title' => 'Business Permit Assist', 'icon' => 'building-storefront', 'desc' => 'Assistance for new business registration and renewals.'],
-                        ['title' => 'Community Announcements', 'icon' => 'megaphone', 'desc' => 'Stay updated with the latest news and projects.'],
-                        ['title' => 'Event Notifications', 'icon' => 'calendar', 'desc' => 'Get notified about upcoming barangay assemblies and events.'],
-                    ];
-                @endphp
-
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                 @foreach($services as $service)
-                <flux:card class="hover:border-blue-500 transition-all duration-300 group">
-                    <div class="flex items-start gap-4">
-                        <div class="p-3 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-                            <flux:icon :icon="$service['icon']" variant="mini" />
-                        </div>
-                        <div>
-                            <flux:heading size="lg" class="mb-1">{{ $service['title'] }}</flux:heading>
-                            <p class="text-sm text-zinc-500">{{ $service['desc'] }}</p>
-                        </div>
+                <div class="group bg-white rounded-xl border border-gray-100 shadow-sm p-8 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <div class="w-14 h-14 bg-green-50 rounded-xl flex items-center justify-center mb-6 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                        <i data-lucide="{{ $service['icon'] }}" class="w-7 h-7"></i>
                     </div>
-                </flux:card>
+                    <h3 class="mb-3 text-lg font-bold text-gray-900">{{ $service['title'] }}</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">{{ $service['description'] }}</p>
+                </div>
                 @endforeach
             </div>
-        </flux:main>
-    </div>
+        </div>
+    </section>
 
-    {{-- 5. HOW TO GET STARTED (From React Code Steps) --}}
-    <div id="process" class="bg-zinc-50 dark:bg-zinc-950 py-20">
-        <flux:main container>
-            <div class="grid md:grid-cols-2 gap-16 items-start">
-                <div>
-                    <flux:heading level="2" size="xl" class="font-bold text-zinc-900 mb-8">How to Get Started</flux:heading>
-                    
-                    <div class="relative space-y-0">
-                        {{-- Step 1 --}}
-                        <div class="flex gap-4 pb-12 relative">
-                            <div class="absolute left-4 top-8 bottom-0 w-0.5 bg-zinc-200 dark:bg-zinc-800"></div>
-                            <div class="flex-none flex items-center justify-center size-8 rounded-full bg-blue-600 text-white font-bold text-sm z-10">1</div>
-                            <div>
-                                <h4 class="font-bold text-zinc-900 dark:text-white">Register Account</h4>
-                                <p class="text-sm text-zinc-500 mt-1">Contact the barangay office to register or sign up online to receive credentials.</p>
-                            </div>
+    <section class="py-20 bg-green-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">How does it work?</h2>
+                <p class="text-lg text-gray-600">Get your requested documents in 3 simple steps</p>
+            </div>
+            
+            <div class="relative">
+                <div class="hidden md:block absolute top-12 left-1/6 right-1/6 h-0.5 bg-green-200 z-0 transform -translate-y-1/2"></div>
+
+                <div class="grid md:grid-cols-3 gap-12 relative z-10">
+                    @foreach($howItWorksSteps as $index => $step)
+                    <div class="flex flex-col items-center text-center">
+                        <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg mb-6 border-4 border-white relative">
+                            <span class="text-3xl font-bold text-primary">{{ $index + 1 }}</span>
                         </div>
-                        {{-- Step 2 --}}
-                        <div class="flex gap-4 pb-12 relative">
-                            <div class="absolute left-4 top-8 bottom-0 w-0.5 bg-zinc-200 dark:bg-zinc-800"></div>
-                            <div class="flex-none flex items-center justify-center size-8 rounded-full bg-blue-600 text-white font-bold text-sm z-10">2</div>
-                            <div>
-                                <h4 class="font-bold text-zinc-900 dark:text-white">Log In</h4>
-                                <p class="text-sm text-zinc-500 mt-1">Access the system using your assigned credentials via email.</p>
-                            </div>
-                        </div>
-                        {{-- Step 3 --}}
-                        <div class="flex gap-4 pb-12 relative">
-                            <div class="absolute left-4 top-8 bottom-0 w-0.5 bg-zinc-200 dark:bg-zinc-800"></div>
-                            <div class="flex-none flex items-center justify-center size-8 rounded-full bg-blue-600 text-white font-bold text-sm z-10">3</div>
-                            <div>
-                                <h4 class="font-bold text-zinc-900 dark:text-white">Complete Profile</h4>
-                                <p class="text-sm text-zinc-500 mt-1">Update your resident information to ensure accurate documentation.</p>
-                            </div>
-                        </div>
-                        {{-- Step 4 --}}
-                        <div class="flex gap-4 relative">
-                            <div class="flex-none flex items-center justify-center size-8 rounded-full bg-blue-600 text-white font-bold text-sm z-10">4</div>
-                            <div>
-                                <h4 class="font-bold text-zinc-900 dark:text-white">Submit Requests</h4>
-                                <p class="text-sm text-zinc-500 mt-1">Start submitting requests and accessing services immediately.</p>
-                            </div>
-                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">{{ $step['title'] }}</h3>
+                        <p class="text-gray-600 leading-relaxed max-w-xs">{{ $step['description'] }}</p>
                     </div>
-                </div>
-
-                {{-- Contact Box (From React Code) --}}
-                <div class="bg-white dark:bg-zinc-900 p-8 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-lg sticky top-24">
-                    <flux:heading level="3" size="lg" class="mb-6 font-bold text-zinc-900">Contact Information</flux:heading>
-                    <p class="text-sm text-zinc-600 mb-6">For assistance or questions about the e-services system, please contact:</p>
-                    
-                    <div class="space-y-4">
-                        <div class="flex items-center gap-3">
-                            <div class="size-8 rounded-md bg-blue-50 flex items-center justify-center text-blue-600">
-                                <flux:icon.envelope variant="mini" />
-                            </div>
-                            <span class="text-zinc-700 dark:text-zinc-300 text-sm font-medium">info@barangayaliaga.gov.ph</span>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <div class="size-8 rounded-md bg-blue-50 flex items-center justify-center text-blue-600">
-                                <flux:icon.phone variant="mini" />
-                            </div>
-                            <span class="text-zinc-700 dark:text-zinc-300 text-sm font-medium">(02) 8123-4567</span>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <div class="size-8 rounded-md bg-blue-50 flex items-center justify-center text-blue-600">
-                                <flux:icon.map-pin variant="mini" />
-                            </div>
-                            <span class="text-zinc-700 dark:text-zinc-300 text-sm font-medium">Aliaga Main Road, Philippines</span>
-                        </div>
-                    </div>
-
-                    <flux:separator class="my-6" />
-                    
-                    <flux:button href="{{ route('login') }}" variant="filled" class="w-full">
-                        Login to Portal
-                    </flux:button>
+                    @endforeach
                 </div>
             </div>
-        </flux:main>
+        </div>
+    </section>
+
+<section id="announcements" class="py-20 bg-white overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row justify-between items-end mb-10 border-b border-gray-100 pb-4">
+            <div>
+                <h2 class="text-3xl font-bold text-gray-900">Recent Announcements</h2>
+                <p class="text-gray-500 mt-2">News and updates from the Barangay Hall</p>
+            </div>
+            {{-- Slider Controls --}}
+            <div class="flex space-x-2 mt-4 md:mt-0">
+                <button onclick="moveSlide(-1)" class="p-2 rounded-full border hover:bg-gray-50 text-gray-600 transition">
+                    <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                </button>
+                <button onclick="moveSlide(1)" class="p-2 rounded-full border hover:bg-gray-50 text-gray-600 transition">
+                    <i data-lucide="chevron-right" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+
+        @if($announcements && $announcements->count() > 0)
+            <div class="relative group" onmouseenter="pauseSlider()" onmouseleave="resumeSlider()">
+                <div class="overflow-hidden rounded-2xl shadow-xl border border-gray-100 bg-white">
+                    <div id="slider-container" class="flex slider-wrapper w-full">
+                        
+                        @foreach($announcements as $announcement)
+                        <div class="w-full flex-shrink-0 min-w-full">
+                            <div class="flex flex-col md:flex-row h-full md:h-[400px]">
+                                
+                                {{-- Image Section --}}
+                                <div class="md:w-5/12 relative bg-gray-200 h-64 md:h-full">
+                                    @php
+                                        $announceImg = $announcement->cover_image 
+                                            ? Storage::url($announcement->cover_image) 
+                                            : 'https://placehold.co/600x400/e2e8f0/1e293b?text=Announcement';
+                                    @endphp
+                                    <img src="{{ $announceImg }}" alt="{{ $announcement->title }}" class="w-full h-full object-cover">
+                                    
+                                    {{-- Optional: Status Badge if needed --}}
+                                    @if($announcement->status === 'archived')
+                                        <div class="absolute top-4 left-4">
+                                            <span class="bg-gray-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md uppercase tracking-wide">Archived</span>
+                                        </div>
+                                    @endif
+                                </div>
+                                
+                                {{-- Content Section --}}
+                                <div class="md:w-7/12 p-8 md:p-10 flex flex-col justify-between bg-white">
+                                    <div>
+                                        <div class="flex items-center space-x-4 mb-6">
+                                            @php 
+                                                // Use publish_at, fallback to created_at
+                                                $date = $announcement->publish_at ?? $announcement->created_at;
+                                            @endphp
+                                            
+                                            <div class="flex flex-col items-center justify-center bg-green-50 text-green-700 rounded-lg px-4 py-2 border border-green-100">
+                                                <span class="text-2xl font-bold leading-none">{{ $date->format('d') }}</span>
+                                                <span class="text-xs font-bold uppercase">{{ $date->format('M') }}</span>
+                                            </div>
+                                            <div class="text-sm text-gray-400 flex items-center">
+                                                <i data-lucide="clock" class="w-4 h-4 mr-1"></i>
+                                                {{ $date->format('h:i A') }}
+                                            </div>
+                                        </div>
+
+                                        <h3 class="text-2xl font-bold text-gray-900 mb-4 line-clamp-2 leading-tight">
+                                            {{ $announcement->title }}
+                                        </h3>
+                                        
+                                        <div class="text-gray-600 leading-relaxed mb-6 line-clamp-3">
+                                            {!! Str::limit(strip_tags($announcement->content), 250) !!}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        {{-- Link uses the object for automatic slug resolution --}}
+                                        <a href="{{ route('public.announcements.show', $announcement) }}" class="text-green-600 hover:text-green-800 font-semibold text-sm flex items-center group/btn">
+                                            Read Full Announcement 
+                                            <i data-lucide="arrow-right" class="w-4 h-4 ml-2 transform group-hover/btn:translate-x-1 transition-transform"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+
+                    </div>
+                </div>
+            </div>
+        @else
+            <div class="bg-gray-50 rounded-lg p-12 text-center border-2 border-dashed border-gray-200">
+                <i data-lucide="inbox" class="w-12 h-12 text-gray-300 mx-auto mb-4"></i>
+                <p class="text-gray-500 font-medium">No active announcements at the moment.</p>
+            </div>
+        @endif
     </div>
+</section>
 
-    {{-- 6. FOOTER --}}
-    <footer class="bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 py-8 text-center text-xs text-zinc-500">
-        <flux:main container>
-            &copy; {{ date('Y') }} Barangay Aliaga Integrated E-Services. All rights reserved.
-        </flux:main>
-    </footer>
+    <section class="py-16 bg-gradient-to-br from-gray-50 to-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">Barangay Officials</h2>
+                <p class="text-gray-600">Meet the leaders serving our community</p>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                @forelse($officials as $official)
+                <div class="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group">
+                    <div class="aspect-[4/5] overflow-hidden bg-gray-200 relative">
+                        @php
+                            $userPhoto = $official->resident->user->profile_photo ?? null;
+                            $residentImage = $official->resident->image ?? null;
+                            $imagePath = $userPhoto ?? $residentImage;
+                            
+                            if ($imagePath) {
+                                $src = asset('storage/' . $imagePath);
+                            } else {
+                                $name = $official->resident->full_name ?? 'Official';
+                                $src = 'https://ui-avatars.com/api/?name='.urlencode($name).'&background=16a34a&color=fff&size=512';
+                            }
+                        @endphp
+                        <img src="{{ $src }}" alt="Official" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-60"></div>
+                        
+                        <div class="absolute bottom-0 left-0 right-0 p-4 text-white">
+                            <p class="text-xs font-semibold uppercase tracking-wider bg-primary/90 inline-block px-2 py-1 rounded mb-1">
+                                {{ $official->position->title ?? 'Official' }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="font-bold text-gray-900 text-lg leading-tight">{{ $official->resident->full_name ?? 'Unknown' }}</h3>
+                        <div class="mt-3 flex space-x-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                           </div>
+                    </div>
+                </div>
+                @empty
+                <div class="col-span-full text-center py-10">
+                    <p class="text-gray-500 italic">Official list is currently being updated.</p>
+                </div>
+                @endforelse
+            </div>
+        </div>
+    </section>
 
-    @fluxScripts
+    <section class="py-16 bg-white border-t border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-12">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6">Contact Us</h2>
+                    <div class="space-y-6">
+                        <div class="flex items-start space-x-4">
+                            <div class="bg-green-50 p-3 rounded-lg text-primary">
+                                <i data-lucide="map-pin" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900">Visit our Office</p>
+                                <p class="text-gray-600">{{ $settings['address'] ?? 'Aliaga, Malasiqui Pangasinan' }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-4">
+                            <div class="bg-green-50 p-3 rounded-lg text-primary">
+                                <i data-lucide="phone" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900">Call Us</p>
+                                <p class="text-gray-600">{{ $settings['contact_phone'] ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-4">
+                            <div class="bg-green-50 p-3 rounded-lg text-primary">
+                                <i data-lucide="mail" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900">Email Us</p>
+                                <p class="text-gray-600">{{ $settings['office_email'] ?? 'info@barangayaliaga.gov.ph' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 rounded-2xl p-8 border border-gray-100">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Office Hours</h3>
+                    <ul class="space-y-3">
+                        <li class="flex justify-between items-center border-b border-gray-200 pb-2">
+                            <span class="text-gray-600">Monday - Friday</span>
+                            <span class="font-semibold text-primary">8:00 AM - 5:00 PM</span>
+                        </li>
+                        <li class="flex justify-between items-center border-b border-gray-200 pb-2">
+                            <span class="text-gray-600">Saturday</span>
+                            <span class="font-semibold text-primary">8:00 AM - 12:00 PM</span>
+                        </li>
+                        <li class="flex justify-between items-center text-gray-400">
+                            <span>Sunday</span>
+                            <span>Closed</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    @include('partials.footer')
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // SLIDER LOGIC
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('slider-container');
+            if(!container) return; // Exit if no announcements
+
+            const slides = container.children;
+            const totalSlides = slides.length;
+            let currentSlide = 0;
+            let autoPlayInterval;
+
+            // Make moveSlide global so buttons can access it
+            window.moveSlide = function(direction) {
+                currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
+                updateCarousel();
+                resetTimer(); // Reset auto-play timer on manual click
+            }
+
+            // Function to update CSS transform
+            function updateCarousel() {
+                container.style.transform = `translateX(-${currentSlide * 100}%)`;
+            }
+
+            // Auto Play Functionality
+            function startAutoPlay() {
+                autoPlayInterval = setInterval(() => {
+                    moveSlide(1);
+                }, 5000); // Change slide every 5 seconds
+            }
+
+            function stopAutoPlay() {
+                clearInterval(autoPlayInterval);
+            }
+
+            // Global functions for hover pause (called in HTML)
+            window.pauseSlider = stopAutoPlay;
+            window.resumeSlider = startAutoPlay;
+
+            // Helper to reset timer on manual interaction
+            function resetTimer() {
+                stopAutoPlay();
+                startAutoPlay();
+            }
+
+            // Start on load
+            if(totalSlides > 1) {
+                startAutoPlay();
+            }
+        });
+    </script>
 </body>
 </html>

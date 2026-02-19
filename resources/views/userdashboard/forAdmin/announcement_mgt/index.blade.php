@@ -10,7 +10,6 @@
             >
                 Notices
             </flux:navbar.item>
-
         </flux:navbar>
     </x-slot:header>
 
@@ -40,14 +39,14 @@
                 <flux:table.columns>
                     <flux:table.column>Title</flux:table.column>
                     <flux:table.column>Status</flux:table.column>
-                    <flux:table.column>Priority</flux:table.column>
-                    <flux:table.column>Date</flux:table.column>
+                    <flux:table.column>Publish Date</flux:table.column> {{-- Changed from Priority --}}
                     <flux:table.column align="end">Actions</flux:table.column>
                 </flux:table.columns>
 
                 <flux:table.rows>
                     @forelse($announcements as $item)
                         <flux:table.row :key="$item->id">
+                            {{-- Title & Image --}}
                             <flux:table.cell>
                                 <div class="flex items-center gap-3">
                                     @if($item->cover_image)
@@ -56,55 +55,59 @@
                                         </div>
                                     @else
                                         <div class="flex h-10 w-10 items-center justify-center rounded bg-zinc-100 dark:bg-zinc-800 shrink-0">
-                                            <flux:icon name="megaphone" class="text-zinc-400" size="sm" />
+                                            <flux:icon name="newspaper" class="text-zinc-400" size="sm" />
                                         </div>
                                     @endif
                                     
                                     <div class="flex flex-col">
                                         <span class="font-medium truncate max-w-[200px]">{{ $item->title }}</span>
-                                        @if($item->is_pinned)
-                                            <span class="text-xs text-blue-600 flex items-center gap-1">
-                                                <flux:icon name="map-pin" size="xs" /> Pinned
-                                            </span>
-                                        @endif
                                     </div>
                                 </div>
                             </flux:table.cell>
 
+                            {{-- Status Badge --}}
                             <flux:table.cell>
                                 @php
                                     $statusColor = match($item->status) {
                                         'published' => 'green',
-                                        'draft' => 'zinc',
-                                        'archived' => 'amber',
-                                    };
-                                @endphp
-                                <flux:badge :color="$statusColor" size="sm" inset="top bottom">{{ ucfirst($item->status) }}</flux:badge>
-                            </flux:table.cell>
-
-                            <flux:table.cell>
-                                @php
-                                    $prioColor = match($item->priority) {
-                                        'emergency' => 'red',
-                                        'high' => 'orange',
+                                        'archived' => 'zinc',
                                         default => 'zinc',
                                     };
+                                    
+                                    // Visual check for expiration
+                                    if($item->expires_at && $item->expires_at->isPast()) {
+                                        $statusColor = 'red';
+                                        $statusLabel = 'Expired';
+                                    } else {
+                                        $statusLabel = ucfirst($item->status);
+                                    }
                                 @endphp
-                                <flux:badge :color="$prioColor" size="sm">{{ ucfirst($item->priority) }}</flux:badge>
+                                <flux:badge :color="$statusColor" size="sm" inset="top bottom">{{ $statusLabel }}</flux:badge>
                             </flux:table.cell>
 
-                            <flux:table.cell class="text-zinc-500">
-                                {{ $item->created_at->format('M d, Y') }}
+                            {{-- Dates (Replaces Priority) --}}
+                            <flux:table.cell>
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-medium">
+                                        {{ $item->publish_at ? $item->publish_at->format('M d, Y') : 'Draft' }}
+                                    </span>
+                                    @if($item->expires_at)
+                                        <span class="text-xs text-zinc-500">
+                                            Exp: {{ $item->expires_at->format('M d, Y') }}
+                                        </span>
+                                    @endif
+                                </div>
                             </flux:table.cell>
 
+                            {{-- Actions --}}
                             <flux:table.cell align="end">
                                 <flux:dropdown>
                                     <flux:button icon="ellipsis-horizontal" size="xs" variant="ghost" />
                                     <flux:menu>
-                                        <flux:menu.item href="{{ route('announcements.show', $item->id) }}" icon="eye">View</flux:menu.item>
-                                        <flux:menu.item href="{{ route('announcements.edit', $item->id) }}" icon="pencil-square">Edit</flux:menu.item>
+                                        <flux:menu.item href="{{ route('announcements.show', $item) }}" icon="eye">View</flux:menu.item>
+                                        <flux:menu.item href="{{ route('announcements.edit', $item) }}" icon="pencil-square">Edit</flux:menu.item>
                                         <flux:menu.separator />
-                                        <form action="{{ route('announcements.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Are you sure?');">
+                                        <form action="{{ route('announcements.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this?');">
                                             @csrf @method('DELETE')
                                             <flux:menu.item type="submit" icon="trash" class="text-red-600">Delete</flux:menu.item>
                                         </form>
@@ -114,7 +117,7 @@
                         </flux:table.row>
                     @empty
                         <flux:table.row>
-                            <flux:table.cell colspan="5" class="text-center text-zinc-500 py-6">No announcements found.</flux:table.cell>
+                            <flux:table.cell colspan="4" class="text-center text-zinc-500 py-6">No announcements found.</flux:table.cell>
                         </flux:table.row>
                     @endforelse
                 </flux:table.rows>

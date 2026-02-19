@@ -1,6 +1,7 @@
 <flux:dropdown position="bottom" align="start">
     <flux:sidebar.profile
         {{ $attributes->only('name') }}
+        :avatar="auth()->user()->profile_photo_url"
         :initials="auth()->user()->initials()"
         icon:trailing="chevrons-up-down"
         data-test="sidebar-menu-button"
@@ -9,6 +10,7 @@
     <flux:menu>
         <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
             <flux:avatar
+                :src="auth()->user()->profile_photo_url"
                 :name="auth()->user()->name"
                 :initials="auth()->user()->initials()"
             />
@@ -19,8 +21,8 @@
         </div>
         <flux:menu.separator />
         <flux:menu.radio.group>
-            <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
-                {{ __('Settings') }}
+            <flux:menu.item :href="route('profile.edit')" icon="user" wire:navigate>
+                {{ __('Profile') }}
             </flux:menu.item>
             <form method="POST" action="{{ route('logout') }}" class="w-full">
                 @csrf

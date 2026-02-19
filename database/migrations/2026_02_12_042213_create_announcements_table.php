@@ -10,26 +10,16 @@ return new class extends Migration
     {
         Schema::create('announcements', function (Blueprint $table) {
             $table->id();
-            
-            // Content
             $table->string('title');
             $table->string('slug')->unique(); // For SEO-friendly URLs (e.g., /announcements/water-interruption)
-            $table->longText('content'); // Using longText for rich text editors
-            $table->string('cover_image')->nullable(); // Path to an image file
-            
-            // Meta & Status
-            $table->enum('status', ['draft', 'published', 'archived'])->default('draft');
-            $table->enum('priority', ['normal', 'high', 'emergency'])->default('normal'); // 'emergency' can trigger red badges
-            $table->boolean('is_pinned')->default(false); // To stick important posts to the top
-            
-            // Scheduling
-            $table->timestamp('published_at')->nullable(); // Schedule posts for the future
-            
-            // Relations
-            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // The admin who posted it
-
+            $table->longText('content'); 
+            $table->string('cover_image')->nullable(); 
+            $table->enum('status', ['published', 'archived'])->default('published');
+            $table->timestamp('publish_at')->nullable();
+            $table->timestamp('expires_at')->nullable();    
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');  
             $table->timestamps();
-            $table->softDeletes(); // Allows restoring deleted announcements
+            $table->softDeletes(); 
         });
     }
 
