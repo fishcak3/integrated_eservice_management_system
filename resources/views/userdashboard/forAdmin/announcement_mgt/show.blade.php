@@ -2,7 +2,7 @@
 
     <x-slot name="header">
         <flux:breadcrumbs class="mb-2">
-            <flux:breadcrumbs.item href="{{ route('announcements.index') }}">Announcements</flux:breadcrumbs.item>
+            <flux:breadcrumbs.item href="{{ route('admin.announcements.index') }}">Announcements</flux:breadcrumbs.item>
             <flux:breadcrumbs.item>View</flux:breadcrumbs.item>
             <flux:breadcrumbs.item>{{ $announcement->title }}</flux:breadcrumbs.item>
         </flux:breadcrumbs>
@@ -19,7 +19,7 @@
                 <flux:subheading>View the full details and content of this announcement.</flux:subheading>
             </div>
             
-            <flux:button href="{{ route('announcements.index') }}" variant="ghost" icon="arrow-left" size="sm">
+            <flux:button href="{{ route('admin.announcements.index') }}" variant="ghost" icon="arrow-left" size="sm">
                 Back to List
             </flux:button>
         </div>
@@ -78,7 +78,7 @@
                     @endif
                 </div>
 
-                <flux:button href="{{ route('announcements.edit', $announcement) }}" size="sm" icon="pencil-square">
+                <flux:button href="{{ route('admin.announcements.edit', $announcement) }}" size="sm" icon="pencil-square">
                     Edit Announcement
                 </flux:button>
             </div>

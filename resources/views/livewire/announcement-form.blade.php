@@ -7,17 +7,28 @@
 
             {{-- Status & Dates Grid --}}
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                {{-- Status (Enum: published, archived) --}}
-                <flux:select label="Status" wire:model="status">
-                    <flux:select.option value="published">Published</flux:select.option>
-                    <flux:select.option value="archived">Archived</flux:select.option>
-                </flux:select>
 
-                {{-- Publish Date --}}
-                <flux:input type="datetime-local" label="Publish Date" wire:model="publish_at" />
+                {{-- Added .live to wire:model so the UI updates instantly --}}
+                <flux:radio.group wire:model.live="status" label="Status" variant="segmented">
+                    <flux:radio value="draft" label="Draft" icon="rectangle-stack" />
+                    <flux:radio value="published" label="Publish" icon="arrow-top-right-on-square" />
+                    <flux:radio value="archived" label="Archive" icon="archive-box" />
+                </flux:radio.group>
 
-                {{-- Expiration Date --}}
-                <flux:input type="datetime-local" label="Expiration Date (Optional)" wire:model="expires_at" description="Auto-archives after this date." />
+                {{-- Publish Date (Hidden if status is published) --}}
+                @if($status !== 'published')
+                    <flux:input type="datetime-local" label="Publish Date" wire:model="publish_at" />
+                @else
+                    {{-- Empty div to keep the grid layout aligned --}}
+                    <div></div>
+                @endif
+
+                <div>
+                    {{-- Expiration Date --}}
+                    <flux:label>Expiration Date (Optional)</flux:label>
+                    <flux:input type="datetime-local" wire:model="expires_at" />
+                    <flux:description>Auto-archives after this date.</flux:description>
+                </div>
             </div>
 
             {{-- Image Upload Section --}}
@@ -46,8 +57,11 @@
                     @if (! $cover_image && $existing_image)
                         <div class="relative rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 w-full sm:w-64">
                             <img src="{{ Storage::url($existing_image) }}" class="w-full h-auto object-cover" alt="Current Image">
-                            {{-- Optional: Add logic in component to delete existing image --}}
-                            {{-- <button type="button" wire:click="removeExistingImage" ... > --}}
+                            
+                            {{-- Delete Button (Uncommented and functional) --}}
+                            <button type="button" wire:click="removeExistingImage" class="absolute top-2 right-2 bg-red-600/80 hover:bg-red-700 text-white rounded-full p-1 transition">
+                                <flux:icon name="trash" size="xs" />
+                            </button>
                         </div>
                     @endif
                 </div>
@@ -58,7 +72,7 @@
 
             {{-- Actions --}}
             <div class="flex justify-end gap-2">
-                <flux:button href="{{ route('announcements.index') }}" variant="ghost">Cancel</flux:button>
+                <flux:button href="{{ route('admin.announcements.index') }}" variant="ghost">Cancel</flux:button>
                 <flux:button type="submit" variant="primary">
                     <span wire:loading.remove>Save Announcement</span>
                     <span wire:loading>Saving...</span>

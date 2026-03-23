@@ -94,7 +94,7 @@
 
                     {{-- 5. Actions --}}
                     <div class="flex items-center justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-700">
-                        <flux:button href="{{ route('resident.requests.show', $documentRequest->id) }}" variant="ghost">
+                        <flux:button href="{{ route('resident.requests.index', $documentRequest->id) }}" variant="ghost">
                             Cancel
                         </flux:button>
                         

@@ -4,8 +4,13 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Household;
+use App\Models\Position;
 use App\Models\Resident;
 use App\Models\User;
+use App\Models\Official;
+use App\Models\OfficialTerm;
+use Carbon\Carbon;
 
 class UserSeeder extends Seeder
 {
@@ -14,168 +19,108 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. ADMIN ACCOUNT (Main)
-        $this->createAccount(
-            role: 'admin',
-            email: 'admin@gmail.com',
-            password: 'password',
-            residentData: [
-                'fname' => 'Ivan',
-                'mname' => 'De chavez',
-                'lname' => 'Bugarin',
-                'sex' => 'male',
-                'civil_status' => 'single',
-                'birthdate' => '2002-06-05',
-                'phone_number' => '09123456789',
-                'street' => 'Tagurarit',
-                'laborforce' => true,
-                'voter' => true,
-            ]
-        );
+        $password = Hash::make('password');
+        $now = Carbon::now();
 
-        // 2. OFFICIAL ACCOUNT (Kapitan)
-        $this->createAccount(
-            role: 'official',
-            email: 'kapitan@gmail.com',
-            password: 'password',
-            residentData: [
-                'fname' => 'Juan',
-                'mname' => 'Dela',
-                'lname' => 'Cruz',
-                'sex' => 'male',
-                'civil_status' => 'married',
-                'birthdate' => '1975-01-15',
-                'phone_number' => '09987654321',
-                'street' => 'Centro',
-                'laborforce' => true,
-                'voter' => true,
-            ]
-        );
+        // 1. Create a dummy household
+        $household = Household::create([
+            'household_number' => 'HH-0001',
+            'sitio' => 'Centro',
+        ]);
 
-        // 3. OFFICIAL ACCOUNT (Secretary)
-        $this->createAccount(
-            role: 'official',
-            email: 'secretary@gmail.com',
-            password: 'password',
-            residentData: [
-                'fname' => 'Maria',
-                'mname' => 'Clara',
-                'lname' => 'Santos',
-                'sex' => 'female',
-                'civil_status' => 'single',
-                'birthdate' => '1995-03-20',
-                'phone_number' => '09112223333',
-                'street' => 'Poblacion',
-                'laborforce' => true,
-                'voter' => true,
-            ]
-        );
+        // 2. Create Positions for the officials
+        $captainPosition = Position::create(['title' => 'Barangay Captain', 'max_members' => 1]);
+        $kagawadPosition = Position::create(['title' => 'Barangay Kagawad', 'max_members' => 7]);
 
-        // 4. RESIDENT (Standard)
-        $this->createAccount(
-            role: 'resident',
-            email: 'resident@gmail.com',
-            password: 'password',
-            residentData: [
-                'fname' => 'Pedro',
-                'mname' => 'Penduko',
-                'lname' => 'Reyes',
-                'sex' => 'male',
-                'civil_status' => 'single',
-                'birthdate' => '2000-12-12',
-                'phone_number' => '09223334444',
-                'street' => 'Sitio 1',
-                'laborforce' => true,
-                'voter' => false,
-            ]
-        );
+        // ==========================================
+        // 3. SEED ADMIN (1 User)
+        // ==========================================
+        $adminResident = Resident::create([
+            'household_id' => $household->id,
+            'relation_to_head' => 'head',
+            'fname' => 'System',
+            'lname' => 'Admin',
+            'sex' => 'male',
+            'status' => 'active',
+        ]);
 
-        // 5. RESIDENT (Indigent / 4Ps / PWD)
-        $this->createAccount(
-            role: 'resident',
-            email: 'indigent@gmail.com',
-            password: 'password',
-            residentData: [
-                'fname' => 'Nena',
-                'mname' => 'Lopez',
-                'lname' => 'Garcia',
-                'sex' => 'female',
-                'civil_status' => 'widowed',
-                'birthdate' => '1980-05-05',
-                'phone_number' => '09334445555',
-                'street' => 'Riverside',
-                'is_4ps' => true,
-                'is_pwd' => true,
-                'solo_parent' => true,
-                'voter' => true,
-            ]
-        );
+        User::create([
+            'resident_id' => $adminResident->id,
+            'email' => 'admin@gmail.com',
+            'password' => $password,
+            'role' => 'admin',
+            'verification_status' => 'verified',
+            'account_verified_at' => $now,
+        ]);
 
-        // 6. RESIDENT (Senior Citizen)
-        $this->createAccount(
-            role: 'resident',
-            email: 'lolo@gmail.com',
-            password: 'password',
-            residentData: [
-                'fname' => 'Jose',
-                'mname' => 'Protacio',
-                'lname' => 'Rizal',
-                'sex' => 'male',
-                'civil_status' => 'married',
-                'birthdate' => '1950-06-19',
-                'phone_number' => '09445556666',
-                'street' => 'Heritage',
-                'senior_citizen' => true,
-                'voter' => true,
-            ]
-        );
-    }
 
-    /**
-     * Helper function to create a Resident and linked User.
-     */
-    private function createAccount(string $role, string $email, string $password, array $residentData): void
-    {
-        // Default values for common fields
-        $defaults = [
-            'suffix' => null,
-            'region' => 'Region I',
-            'province' => 'Pangasinan',
-            'municipality' => 'Malasiqui',
-            'barangay' => 'Aliaga',
-            'household_id' => 'HH-' . rand(100, 999),
-            'solo_parent' => false,
-            'ofw' => false,
-            'is_pwd' => false,
-            'is_4ps' => false,
-            'out_of_school_children' => false,
-            'osa' => false,
-            'unemployed' => false,
-            'laborforce' => false,
-            'isy_isc' => false,
-            'senior_citizen' => false,
-            'voter' => false,
-            'mother_maiden_name' => 'Sample Mother Name',
+        // ==========================================
+        // 4. SEED OFFICIALS (2 Users)
+        // ==========================================
+        $officialsData = [
+            ['fname' => 'Juan', 'lname' => 'Dela Cruz', 'email' => 'captain@gmail.com', 'position_id' => $captainPosition->id],
+            ['fname' => 'Maria', 'lname' => 'Santos', 'email' => 'kagawad@gmail.com', 'position_id' => $kagawadPosition->id],
         ];
 
-        // Merge defaults
-        $finalResidentData = array_merge($defaults, $residentData);
+        foreach ($officialsData as $data) {
+            // A. Create Resident Profile
+            $officialResident = Resident::create([
+                'household_id' => $household->id,
+                'relation_to_head' => 'other',
+                'fname' => $data['fname'],
+                'lname' => $data['lname'],
+                'sex' => 'male',
+                'status' => 'active',
+            ]);
 
-        // Create Resident
-        $resident = Resident::create($finalResidentData);
+            // B. Create User Account
+            User::create([
+                'resident_id' => $officialResident->id,
+                'email' => $data['email'],
+                'password' => $password,
+                'role' => 'official',
+                'verification_status' => 'verified',
+                'account_verified_at' => $now,
+            ]);
 
-        // Create User linked to Resident
-        User::create([
-            'resident_id' => $resident->id,
-            'email' => $email,
-            'password' => Hash::make($password),
-            'role' => $role,
-            'profile_photo' => null,
-            
-            // --- UPDATED: Add Verification Fields ---
-            'verification_status' => 'verified', // Auto-verify seeded users
-            'account_verified_at' => now(),      // Set timestamp to now
-            'supporting_document' => null,       // No document needed for seeders
-        ]);
+            // C. Add to Officials Table
+            $officialRecord = Official::create([
+                'resident_id' => $officialResident->id,
+            ]);
+
+            // D. Assign Official Term
+            OfficialTerm::create([
+                'official_id' => $officialRecord->id,
+                'position_id' => $data['position_id'],
+                'term_start' => '2023-11-01', // Example start date
+                'status' => 'current',
+                'election_year' => '2023-2026',
+                'is_active' => true,
+            ]);
+        }
+
+
+        // ==========================================
+        // 5. SEED REGULAR RESIDENTS (2 Users)
+        // ==========================================
+        for ($i = 1; $i <= 2; $i++) {
+            $resident = Resident::create([
+                'household_id' => $household->id,
+                'relation_to_head' => 'child',
+                'fname' => 'Resident',
+                'lname' => 'User ' . $i,
+                'sex' => 'female',
+                'status' => 'active',
+            ]);
+
+            User::create([
+                'resident_id' => $resident->id,
+                'email' => "resident{$i}@gmail.com",
+                'password' => $password,
+                'role' => 'resident',
+                'verification_status' => 'verified',
+                'account_verified_at' => $now,
+            ]);
+        }
     }
 }

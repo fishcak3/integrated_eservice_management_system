@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
             DocumentTypeSeeder::class,
             ComplaintTypeSeeder::class,
             PositionSeeder::class,
+            AnnouncementSeeder::class,
+            ChatbotFaqSeeder::class,
         ]); 
     }
 }

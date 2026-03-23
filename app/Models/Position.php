@@ -11,9 +11,9 @@ class Position extends Model
 
     protected $fillable = ['title', 'description', 'is_active', 'max_members'];
 
-    public function user()
+    public function officials()
     {
-        return $this->hasOne(User::class, 'position_id');
+        return $this->hasMany(Official::class);
     }
     
 }

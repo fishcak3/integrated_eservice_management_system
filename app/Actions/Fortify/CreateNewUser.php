@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
+use App\Notifications\SystemAlertNotification;
+use Illuminate\Support\Facades\Notification;
 
 class CreateNewUser implements CreatesNewUsers
 {
@@ -21,11 +23,10 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
-        // 1. Validate the form inputs
         Validator::make($input, [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'middle_name' => ['nullable', 'string', 'max:255'], // Changed to nullable just in case
+            'middle_name' => ['nullable', 'string', 'max:255'], 
             'email' => [
                 'required',
                 'string',
@@ -34,28 +35,24 @@ class CreateNewUser implements CreatesNewUsers
                 Rule::unique(User::class),
             ],
             'password' => $this->passwordRules(),
+            'agree_terms' => ['required', 'accepted'],
+        ],[
+            'agree_terms.accepted' => 'You must agree to the Terms of Service and Privacy Policy to register.',
         ])->validate();
 
-        // 2. Search for the resident in the database
         $resident = Resident::where('fname', $input['first_name'])
                     ->where('lname', $input['last_name'])
-                    // Use 'like' or exact match depending on your strictness. 
-                    // Using optional input logic for middle name:
                     ->when(!empty($input['middle_name']), function($q) use ($input) {
                         return $q->where('mname', $input['middle_name']);
                     })
                     ->first();
 
-        // 3. If NO resident is found, stop and show error
         if (! $resident) {
             throw ValidationException::withMessages([
                 'first_name' => ['Name not found in barangay records! You need to be a resident to register.'],
             ]);
         }
 
-        // ---------------------------------------------------------
-        // 3.5 NEW CHECK: Check if this Resident already has an account
-        // ---------------------------------------------------------
         $existingAccount = User::where('resident_id', $resident->id)->first();
 
         if ($existingAccount) {
@@ -63,14 +60,28 @@ class CreateNewUser implements CreatesNewUsers
                 'email' => ['This resident already has a registered account. Please log in instead.'],
             ]);
         }
-        // ---------------------------------------------------------
 
-        // 4. Create the User (Linked to the Resident)
-        return User::create([
+        // 1. Create the user and store in a variable instead of returning immediately
+        $newUser = User::create([
             'email' => $input['email'],
             'password' => Hash::make($input['password']),
             'resident_id' => $resident->id, 
             'role' => 'resident',
         ]);
+
+        // --- ADDED NOTIFICATION LOGIC ---
+        // 2. Notify Admins about the new registration
+        $admins = User::where('role', 'admin')->get();
+        $fullName = "{$input['first_name']} {$input['last_name']}";
+        
+        Notification::send($admins, new SystemAlertNotification(
+            'New Account Registered', 
+            "Resident {$fullName} has created a portal account.",
+            route('users.index') // Assuming your admins view user lists here
+        ));
+        // --------------------------------
+
+        // 3. Return the created user for Fortify to log them in
+        return $newUser;
     }
 }

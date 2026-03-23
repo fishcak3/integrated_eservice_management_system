@@ -14,13 +14,7 @@ return new class extends Migration
         Schema::create('officials', function (Blueprint $table) {
             $table->id();
             $table->foreignId('resident_id')->constrained('residents')->cascadeOnDelete();
-            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->foreignId('position_id')->constrained('positions')->cascadeOnDelete();
-            // Term information
-            $table->date('date_start');
-            $table->date('date_end')->nullable();
-            // Status tracking
-            $table->boolean('is_active')->default(true);
+            $table->string('e_signature_path')->nullable();
             $table->timestamps();
         });
     }

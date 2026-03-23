@@ -2,7 +2,7 @@
 
     <x-slot name="header">
         <flux:breadcrumbs class="mb-2">
-            <flux:breadcrumbs.item href="{{ route('announcements.index') }}">Announcements</flux:breadcrumbs.item>
+            <flux:breadcrumbs.item href="{{ route('admin.announcements.index') }}">Announcements</flux:breadcrumbs.item>
             <flux:breadcrumbs.item>Create</flux:breadcrumbs.item>
         </flux:breadcrumbs>
     </x-slot>

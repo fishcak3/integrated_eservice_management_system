@@ -14,38 +14,29 @@ return new class extends Migration
         Schema::create('residents', function (Blueprint $table) {
             $table->id();
 
+            $table->foreignId('household_id')->nullable()->constrained('households')->nullOnDelete();
+            $table->enum('relation_to_head', ['head', 'spouse', 'child', 'parent', 'sibling', 'other'])->nullable();
+
             // Basic Information
             $table->string('fname')->nullable();
             $table->string('mname')->nullable();
             $table->string('lname')->nullable();
             $table->string('suffix')->nullable();
-                     
-            $table->string('status')->default('is_active'); 
+            $table->enum('status', ['active', 'inactive', 'pending', 'deceased', 'transferred'])->default('active'); 
 
             // Personal Info
             $table->string('phone_number')->nullable();
             $table->date('birthdate')->nullable();
+            $table->string('birth_place')->nullable();
             $table->enum('sex', ['male', 'female', 'other'])->nullable();
             $table->enum('civil_status', ['single', 'married', 'widowed'])->nullable();
-
-            // Address
-            $table->string('region')->nullable();
-            $table->string('province')->nullable();
-            $table->string('municipality')->nullable();
-            $table->string('barangay')->nullable();
-            $table->string('street')->nullable();
-            $table->string('zone')->nullable();
-            $table->string('purok')->nullable();
-            $table->string('sitio')->nullable();
-
-            // Household
-            $table->string('household_id')->nullable();
+            $table->string('citizenship')->nullable();
 
             // Sectoral Info
             $table->boolean('solo_parent')->default(false);
             $table->boolean('ofw')->default(false);
             $table->boolean('is_pwd')->default(false);
-            $table->boolean('is_4ps')->default(false);
+            $table->boolean('is_4ps_grantee')->default(false);
             $table->boolean('out_of_school_children')->default(false);
             $table->boolean('osa')->default(false);
             $table->boolean('unemployed')->default(false);

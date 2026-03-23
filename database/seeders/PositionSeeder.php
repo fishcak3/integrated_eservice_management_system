@@ -13,12 +13,7 @@ class PositionSeeder extends Seeder
     public function run(): void
     {
         $positions = [
-            [
-                'title' => 'Barangay Captain',
-                'description' => 'The chief executive of the barangay government (Captain).',
-                'max_members' => 1,
-                'is_active' => true,
-            ],
+
             [
                 'title' => 'Barangay Secretary',
                 'description' => 'Member of the Sangguniang Barangay (Legislative Council).',
@@ -31,12 +26,7 @@ class PositionSeeder extends Seeder
                 'max_members' => 1,
                 'is_active' => true,
             ],
-            [
-                'title' => 'Barangay Kagawad',
-                'description' => 'Member of the Sangguniang Barangay (Legislative Council).',
-                'max_members' => 7,
-                'is_active' => true,
-            ],
+
             [
                 'title' => 'SK Chairperson',
                 'description' => 'Chairperson of the Sangguniang Kabataan (Youth Council).',

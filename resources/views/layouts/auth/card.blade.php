@@ -5,7 +5,7 @@
     </head>
     <body class="min-h-screen bg-neutral-100 antialiased dark:bg-linear-to-b dark:from-neutral-950 dark:to-neutral-900">
         <div class="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
-            <div class="flex w-full max-w-md flex-col gap-6">
+            <div class="flex w-full max-w-lg flex-col gap-6">
                 <a href="{{ route('welcome') }}" class="flex flex-col items-center gap-2 font-medium">
                     @if(isset($global_logo) && $global_logo)
                         <span class="flex h-16 w-16 items-center justify-center rounded-md overflow-hidden">
@@ -32,7 +32,6 @@
                 </div>
             </div>
         </div>
-        @include('partials.footer')
         @fluxScripts
     </body>
 </html>

@@ -4,17 +4,20 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use App\Models\Resident;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Spatie\Activitylog\Traits\LogsActivity; 
+use Spatie\Activitylog\LogOptions;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable;
+    use HasFactory, Notifiable, TwoFactorAuthenticatable, LogsActivity;
 
     /**
      * The attributes that are mass assignable.
@@ -45,7 +48,7 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    /**
+/**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -54,29 +57,59 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'account_verified_at' => 'datetime', // Add this line!
             'password' => 'hashed',
         ];
     }
 
     /**
+     * Get the user's active sessions.
+     */
+    public function activeSessions()
+    {
+        return \Illuminate\Support\Facades\DB::table('sessions')
+            ->where('user_id', $this->id)
+            ->orderBy('last_activity', 'desc')
+            ->get();
+    }
+
+    // <-- SPATIE CONFIG -->
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => "User account {$eventName}");
+    }
+
+    public function isOnline()
+    {
+        return \Illuminate\Support\Facades\DB::table('sessions')
+            ->where('user_id', $this->id)
+            ->where('last_activity', '>=', now()->subMinutes(15)->timestamp)
+            ->exists();
+    }
+
+    /**
      * Get the user's initials
      */
-    public function initials(): string
+
+    public function getInitialsAttribute()
     {
-        if ($this->resident) {
-            $fullName = trim("{$this->resident->fname} {$this->resident->lname}");
-            return Str::of($fullName)
-                ->explode(' ')
-                ->take(2)
-                ->map(fn ($word) => Str::substr($word, 0, 1))
-                ->implode('');
-        }
-        return '';
+        return $this->resident 
+            ? strtoupper(substr($this->resident->fname, 0, 1) . substr($this->resident->lname, 0, 1)) 
+            : '?';
     }
 
     public function resident()
     {
         return $this->belongsTo(Resident::class, 'resident_id');
+    }
+
+    public function residentMessages()
+    {
+        return $this->hasMany(ChatMessage::class, 'resident_id');
     }
 
     protected function name(): Attribute
@@ -109,6 +142,32 @@ class User extends Authenticatable
 
         // Otherwise return the default name
         return $this->name;
+    }
+
+    /**
+     * Check if the user is currently serving as an official with a specific position title.
+     */
+    public function isCurrentOfficialPosition(string $positionTitle): bool
+    {
+        // Check if the user is linked to a resident
+        if (!$this->resident) {
+            return false;
+        }
+
+        // Check if that resident is an official
+        $official = \App\Models\Official::where('resident_id', $this->resident_id)->first();
+        if (!$official) {
+            return false;
+        }
+
+        // Get their current active term
+        $currentTerm = $official->currentTerm()->with('position')->first();
+        if (!$currentTerm || !$currentTerm->position) {
+            return false;
+        }
+
+        // Check if the position title matches what we are looking for
+        return $currentTerm->position->title === $positionTitle;
     }
 
 }

@@ -2,148 +2,164 @@
 
     <x-slot name="header">
         <flux:breadcrumbs class="mb-2">
-            <flux:breadcrumbs.item href="{{ route('residents.household') }}">Households</flux:breadcrumbs.item>
-            <flux:breadcrumbs.item>View</flux:breadcrumbs.item>
-            <flux:breadcrumbs.item>Household Number {{ $id }}</flux:breadcrumbs.item>
+            <flux:breadcrumbs.item :href="route('admin.dashboard')">Dashboard</flux:breadcrumbs.item>
+            <flux:breadcrumbs.item href="{{ route('admin.residents.household') }}">Households</flux:breadcrumbs.item>
+            <flux:breadcrumbs.item>{{ $household->household_number }}</flux:breadcrumbs.item>
         </flux:breadcrumbs>
     </x-slot>
 
-    <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl p-4">
+    {{-- Header Area --}}
+    <div class="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+        <div class="space-y-2">
+            <flux:heading size="xl" level="1">
+                Household #{{ $household->household_number }}
+            </flux:heading>
+            <flux:text variant="subtle">
+                View household information and family members.
+            </flux:text>
+        </div>
         
-        {{-- Header & Back Button --}}
-            <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Household #{{ $id }}</h1>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">View family members and details</p>
-                </div>
+        {{-- Optional: Add an Edit Button here if you have an edit route --}}
+        {{-- <flux:button href="{{ route('admin.residents.household.edit', $household->id) }}" variant="primary" icon="pencil">
+            Edit Household
+        </flux:button> --}}
+    </div>
 
-                <flux:button href="{{ route('residents.household') }}" icon="arrow-left" variant="subtle">
-                    Back to List
-                </flux:button>
-            </div>
-            
-            {{-- Optional: Edit Household Action --}}
-            {{-- <button class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
-                Edit Details
-            </button> --}}
+    {{-- Main Layout Container --}}
+    <div class="space-y-10">
 
-
-        {{-- Household Info Card --}}
-        @php
-            $firstMember = $residents->first();
-        @endphp
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {{-- Address Card --}}
-            <div class="col-span-2 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                <h3 class="text-base font-semibold text-gray-900 dark:text-white">Address Information</h3>
-                <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
-                        <dt class="text-xs font-medium uppercase text-gray-500">Street / Address</dt>
-                        <dd class="mt-1 text-sm font-medium text-gray-900 dark:text-white">{{ $firstMember->street ?? 'N/A' }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs font-medium uppercase text-gray-500">Purok</dt>
-                        <dd class="mt-1 text-sm font-medium text-gray-900 dark:text-white">{{ $firstMember->purok ?? 'N/A' }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs font-medium uppercase text-gray-500">Barangay</dt>
-                        <dd class="mt-1 text-sm font-medium text-gray-900 dark:text-white">{{ $firstMember->barangay ?? 'N/A' }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs font-medium uppercase text-gray-500">Unit Number</dt>
-                        <dd class="mt-1 text-sm font-medium text-gray-900 dark:text-white">{{ $firstMember->unit_number ?? 'N/A' }}</dd>
-                    </div>
-                </div>
+        {{-- Section 1: Household Details --}}
+        <div class="grid grid-cols-1 gap-x-8 gap-y-8 first:pt-0 md:grid-cols-3">
+            <div class="px-4 sm:px-0">
+                <flux:heading size="lg">Household Details</flux:heading>
+                <flux:text variant="subtle" class="mt-1">
+                    Basic location information and overview of the household.
+                </flux:text>
             </div>
 
-            {{-- Stats Card --}}
-            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                <h3 class="text-base font-semibold text-gray-900 dark:text-white">Overview</h3>
-                <div class="mt-4 space-y-4">
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-500">Total Members</span>
-                        <span class="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                            {{ $residents->count() }} People
-                        </span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-500">Status</span>
-                        <span class="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">
-                            Active Household
-                        </span>
-                    </div>
-                </div>
+            <div class="md:col-span-2">
+                <flux:card class="p-6">
+                    <dl class="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2">
+                        <div>
+                            <dt class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Sitio</dt>
+                            <dd class="mt-2 text-sm font-medium text-zinc-900 dark:text-white">
+                                {{ $household->sitio ?? 'N/A' }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Total Members</dt>
+                            <dd class="mt-2 text-sm font-medium text-zinc-900 dark:text-white">
+                                <flux:badge color="blue" size="sm" class="rounded-full px-2.5">
+                                    {{ $household->members->count() }} People
+                                </flux:badge>
+                            </dd>
+                        </div>
+                    </dl>
+                </flux:card>
             </div>
         </div>
 
-        {{-- Members Table --}}
-        <div class="flex flex-1 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-            <div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-                <h3 class="font-semibold text-gray-900 dark:text-white">Family Members</h3>
+        {{-- Section 2: Family Members Table --}}
+        <div class="grid grid-cols-1 gap-x-8 gap-y-8 first:pt-0 md:grid-cols-3">
+            <div class="px-4 sm:px-0">
+                <flux:heading size="lg">Family Members</flux:heading>
+                <flux:text variant="subtle" class="mt-1">
+                    A list of all residents registered under this household.
+                </flux:text>
             </div>
-            
-            <div class="flex-1 overflow-auto">
-                <table class="w-full text-left text-sm text-gray-500 dark:text-gray-400">
-                    <thead class="sticky top-0 z-10 bg-gray-50 text-xs uppercase text-gray-700 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            <th scope="col" class="px-6 py-3">Name</th>
-                            <th scope="col" class="px-6 py-3">Role / Relation</th>
-                            <th scope="col" class="px-6 py-3">Contact</th>
-                            <th scope="col" class="px-6 py-3">Status</th>
-                            <th scope="col" class="px-6 py-3 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200 border-t border-gray-200 dark:divide-gray-700 dark:border-gray-700">
-                        @forelse ($residents as $resident)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                            {{-- Name --}}
-                            <td class="whitespace-nowrap px-6 py-4 font-medium text-gray-900 dark:text-white">
-                                <div class="flex items-center">
-                                    <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs font-bold text-gray-600 dark:bg-gray-600 dark:text-gray-300">
-                                        {{ substr($resident->first_name ?? 'U', 0, 1) }}
-                                    </div> 
-                                    <div class="ml-3">
-                                        <div class="text-sm font-semibold">{{ $resident->first_name }} {{ $resident->last_name }}</div>
-                                        <div class="text-xs font-normal text-gray-500">ID: #{{ $resident->id }}</div>
-                                    </div>
-                                </div>
-                            </td>
 
-                            {{-- Role (Assumption: You might have a relationship column, otherwise static) --}}
-                            <td class="px-6 py-4">
-                                {{ $resident->relationship ?? 'Member' }}
-                            </td>
+            <div class="md:col-span-2">
+                <flux:card class="p-0 overflow-hidden">
+                    <flux:table class="whitespace-nowrap bg-transparent">
+                        <flux:table.columns>
+                            <flux:table.column>Name</flux:table.column>
+                            <flux:table.column>Relation</flux:table.column>
+                            <flux:table.column>Contact</flux:table.column>
+                            <flux:table.column>Status</flux:table.column>
+                            <flux:table.column ></flux:table.column>
+                        </flux:table.columns>
 
-                            {{-- Contact --}}
-                            <td class="px-6 py-4">
-                                {{ $resident->phone_number ?? 'N/A' }}
-                            </td>
+                        <flux:table.rows>
+                            @forelse ($household->members as $resident)
+                                <flux:table.row>
+                                    {{-- Name --}}
+                                    <flux:table.cell>
+                                        {{ $resident->fname }} {{ $resident->lname }}
+                                    </flux:table.cell>
 
-                            {{-- Status --}}
-                            <td class="px-6 py-4">
-                                <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-300">
-                                    {{ ucfirst($resident->status ?? 'Active') }}
-                                </span>
-                            </td>
+                                    {{-- Role --}}
+                                    <flux:table.cell color="primary">
+                                        @if(strtolower($resident->relation_to_head) === 'head')
+                                            <span >Family Head</span>
+                                        @else
+                                            {{ ucfirst($resident->relation_to_head ?? 'Member') }}
+                                        @endif
+                                    </flux:table.cell>
 
-                            {{-- Actions --}}
-                            <td class="px-6 py-4 text-right">
-                                <a href="{{ route('residents.show', $resident->id) }}" class="font-medium text-blue-600 hover:underline dark:text-blue-500">
-                                    View Profile
-                                </a>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="5" class="py-12 text-center text-gray-500">
-                                No members found in this household.
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                                    {{-- Contact --}}
+                                    <flux:table.cell class="text-zinc-600 dark:text-zinc-300">
+                                        {{ $resident->phone_number ?? 'N/A' }}
+                                    </flux:table.cell>
+
+                                    {{-- Status --}}
+                                    <flux:table.cell>
+                                        <flux:badge rounded size="sm" color="{{ strtolower($resident->status) === 'active' ? 'green' : 'zinc' }}">
+                                            {{ ucfirst($resident->status ?? 'Active') }}
+                                        </flux:badge>
+                                    </flux:table.cell>
+
+                                    {{-- Actions --}}
+                                    <flux:table.cell align="end">
+                                        <flux:button href="{{ route('admin.residents.show', $resident->id) }}" size="sm" variant="ghost">
+                                            View Profile
+                                        </flux:button>
+                                    </flux:table.cell>
+                                </flux:table.row>
+                            @empty
+                                <flux:table.row>
+                                    <flux:table.cell colspan="5" class="py-12 text-center text-zinc-500">
+                                        <div class="flex flex-col items-center justify-center">
+                                            <flux:icon.users class="h-8 w-8 text-zinc-300 dark:text-zinc-600 mb-2" />
+                                            <p>No members found in this household.</p>
+                                        </div>
+                                    </flux:table.cell>
+                                </flux:table.row>
+                            @endforelse
+                        </flux:table.rows>
+                    </flux:table>
+                </flux:card>
+            </div>
+        </div>
+
+        {{-- Section 3: Danger Zone --}}
+        <div class="grid grid-cols-1 gap-x-8 gap-y-8 first:pt-0 md:grid-cols-3">
+            <div class="px-4 sm:px-0">
+                <flux:heading size="lg" class="text-red-600 dark:text-red-500">Danger Zone</flux:heading>
+                <flux:text variant="subtle" class="mt-1">
+                    Permanently delete this household from the system. This action cannot be undone.
+                </flux:text>
+            </div>
+
+            <div class="md:col-span-2">
+                <x-warning-card 
+                    title="Delete Household" 
+                    description="Once you delete a household, there is no going back. Please be certain."
+                >
+                    <flux:modal.trigger name="delete-household-{{ $household->id }}">
+                        <flux:button variant="danger">Delete Household</flux:button>
+                    </flux:modal.trigger>
+                </x-warning-card>
             </div>
         </div>
 
     </div>
+
+    {{-- Modals --}}
+    <x-delete-modal 
+        name="delete-household-{{ $household->id }}" 
+        action="{{ route('admin.residents.household.destroy', $household->id) }}"
+    >
+        This will permanently delete the household profile for <strong>Household #{{ $household->household_number }}</strong>. This action cannot be undone.
+    </x-delete-modal>
+
 </x-layouts::app>

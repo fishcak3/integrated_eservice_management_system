@@ -8,9 +8,10 @@
     <body class="min-h-screen bg-white dark:bg-zinc-800">
 
         <flux:sidebar sticky collapsible class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-            <flux:sidebar.header>
-
-                <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center gap-2 px-2">
+            <flux:sidebar.header class="group flex items-center justify-between in-data-flux-sidebar-collapsed-desktop:justify-center">
+                        
+                {{-- 1. The Logo Link --}}
+                <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center gap-2 in-data-flux-sidebar-collapsed-desktop:group-hover:hidden">
                     @if($global_logo ?? false) 
                         <img src="{{ asset('storage/' . $global_logo) }}" 
                             alt="Logo" 
@@ -19,12 +20,19 @@
                         <x-app-logo class="h-8 w-8 shrink-0" /> 
                     @endif
 
+                    {{-- App name hides immediately when the sidebar collapses --}}
                     <span class="font-bold text-sm truncate dark:text-white in-data-flux-sidebar-collapsed-desktop:hidden">
-                        {{ $global_brgy_name ?? 'Barangay Portal' }}
+                        {{ config('app.name') }}
                     </span>
                 </a>
 
-                <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2"/>
+                {{-- 2. The Toggle Button --}}
+                <flux:sidebar.collapse class="
+                    in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2
+                    in-data-flux-sidebar-collapsed-desktop:hidden 
+                    in-data-flux-sidebar-collapsed-desktop:group-hover:flex
+                "/>
+                
             </flux:sidebar.header>
                         
             <flux:sidebar.nav>
@@ -33,52 +41,182 @@
                         <flux:sidebar.item icon="home"                      
                             :href="route('admin.dashboard')"
                             :current="request()->routeIs('admin.dashboard')"
-                            wire:navigate>
+                            >
                             {{ __('Dashboard') }}
                         </flux:sidebar.item>
 
-                        <flux:sidebar.item icon="user"
-                            :href="route('users.index')"
-                            :current="request()->routeIs('users.*')"
-                            wire:navigate>
-                            {{ __('Account Holder') }}
-                        </flux:sidebar.item>
-
-                        <flux:sidebar.item icon="briefcase"
-                            :href="route('officials.index')"
-                            {{-- Use an array to check for multiple route patterns --}}
-                            :current="request()->routeIs(['officials.*', 'positions.*'])"
-                            wire:navigate>
-                            {{ __('Barangay Officials') }}
-                        </flux:sidebar.item>
-
-                        <flux:sidebar.item icon="home-modern"
-                            :href="route('residents.index')"
-                            :current="request()->routeIs('residents.*')"
-                            wire:navigate>
-                            {{ __('Residents') }}
-                        </flux:sidebar.item>
-
-                        <flux:sidebar.item icon="inbox"
-                            :href="route('admin.requests.index')"
-                            :current="request()->routeIs('admin.requests.*')"
-                            wire:navigate>
-                            {{ __('Requests') }}
-                        </flux:sidebar.item>
-
-                        <flux:sidebar.item icon="megaphone"
-                            :href="route('announcements.index')"
-                            :current="request()->routeIs('announcements.*')"
-                            wire:navigate>
-                            {{ __('Announcements') }}
-                        </flux:sidebar.item>
-
-                        <flux:sidebar.group expandable heading="Settings" class="grid">
-                            <flux:sidebar.item icon="cog-6-tooth"
-                                :href="route('settings.index')"
-                                :current="request()->routeIs('settings.*')"
+                        <flux:sidebar.group expandable heading="User Management" class="grid" icon="users">
+    
+                            <flux:sidebar.item 
+                                :href="route('users.index')"
+                                :current="request()->routeIs('users.index')"
+                                icon="user"
                                 wire:navigate>
-                                {{ __('Brgy. Profile Settings') }}
+                                {{ __('All Users') }}
+                            </flux:sidebar.item>
+
+                            <flux:sidebar.item 
+                                :href="route('users.verifications')"
+                                :current="request()->routeIs('users.verifications')"
+                                icon="finger-print"
+                                wire:navigate>
+                                {{ __('Verifications') }}
+                            </flux:sidebar.item>
+
+                        </flux:sidebar.group>
+
+                        <flux:sidebar.group expandable heading="Barangay Officials" class="grid" icon="briefcase">
+
+                            <flux:sidebar.item
+                                href="{{ route('officials.index') }}" 
+                                :current="request()->routeIs('officials.index')"
+                                icon="identification"
+                                wire:navigate
+                            >
+                                Current Officials
+                            </flux:sidebar.item>
+
+                            <flux:sidebar.item
+                                href="{{ route('officials.former') }}" 
+                                :current="request()->routeIs('officials.former')"
+                                icon="archive-box-arrow-down"
+                                wire:navigate
+                            >
+                                Former Officials
+                            </flux:sidebar.item>
+
+                            <flux:sidebar.item
+                                href="{{ route('positions.posIndex') }}" 
+                                :current="request()->routeIs('positions.posIndex')"
+                                icon="briefcase"
+                                wire:navigate
+                            >
+                                Positions
+                            </flux:sidebar.item>
+
+                        </flux:sidebar.group>
+
+                        <flux:sidebar.group expandable heading="Residents" class="grid" icon="users">
+
+                            <flux:sidebar.item
+                                href="{{ route('admin.residents.index') }}" 
+                                :current="Route::is('admin.residents.index')"
+                                icon="user-group"
+                                wire:navigate
+                            >
+                                Resident List
+                            </flux:sidebar.item>
+
+                            <flux:sidebar.item
+                                href="{{ route('admin.residents.household') }}" 
+                                :current="Route::is('admin.residents.household')"
+                                icon="building-office-2"
+                                wire:navigate
+                            >
+                                Households 
+                            </flux:sidebar.item>
+
+                            <flux:sidebar.item
+                                href="{{ route('admin.residents.requests') }}" 
+                                :current="Route::is('admin.residents.requests')"
+                                icon="clipboard-document-check"
+                                wire:navigate
+                            >
+                                Pending Approvals
+                            </flux:sidebar.item>
+
+                        </flux:sidebar.group>
+
+                        <flux:sidebar.group expandable heading="Requests" class="grid" icon="inbox">
+
+                            <flux:sidebar.item
+                                href="{{ route('admin.documents.index') }}" 
+                                :current="request()->routeIs('admin.documents.*')"
+                                :badge="$pendingDocsCount > 0 ? $pendingDocsCount : null"
+                                icon="document-text"
+                                wire:navigate
+                            >
+                                Documents
+                            </flux:sidebar.item>
+
+                            <flux:sidebar.item
+                                href="{{ route('admin.complaints.index') }}" 
+                                :current="request()->routeIs('admin.complaints.*')"
+                                :badge="$pendingComplaintsCount > 0 ? $pendingComplaintsCount : null"
+                                icon="exclamation-triangle"
+                                wire:navigate
+                            >
+                                Complaints
+                            </flux:sidebar.item>
+
+                        </flux:sidebar.group>
+
+                        <flux:sidebar.group expandable heading="Announcements" class="grid" icon="megaphone">
+
+                            <flux:sidebar.item
+                                href="{{ route('admin.announcements.index') }}" 
+                                :current="request()->routeIs('admin.announcements.index')"
+                                icon="newspaper"
+                                wire:navigate
+                            >
+                                All Announcements
+                            </flux:sidebar.item>
+
+                            <flux:sidebar.item
+                                href="{{ route('admin.announcements.archived') }}" 
+                                :current="request()->routeIs('admin.announcements.archived')"
+                                icon="archive-box"
+                                wire:navigate
+                            >
+                                Archived
+                            </flux:sidebar.item>
+
+
+                        </flux:sidebar.group>
+
+                        <flux:sidebar.group expandable heading="Settings" class="grid" icon="cog-6-tooth">
+                            <flux:sidebar.item icon="building-library"
+                                :href="route('settings.index')"
+                                :current="request()->routeIs('settings.index')"
+                                wire:navigate>
+                                {{ __('Brgy. Profile') }}
+                            </flux:sidebar.item>
+
+                            <flux:sidebar.item icon="wrench-screwdriver"
+                                :href="route('settings.backup')"
+                                :current="request()->routeIs('settings.backup')"
+                                wire:navigate>
+                                {{ __('Maintenance') }}
+                            </flux:sidebar.item>
+
+                            <flux:sidebar.item icon="command-line"
+                                :href="route('settings.logs')"
+                                :current="request()->routeIs('settings.logs*')"
+                                wire:navigate>
+                                {{ __('Activity Logs') }}
+                            </flux:sidebar.item>
+                        
+                            <flux:sidebar.item icon="square-3-stack-3d"
+                                href="{{ route('settings.request', ['type' => 'document']) }}" 
+                                :current="request()->routeIs('settings.request') && request('type', 'document') === 'document'"
+                                wire:navigate
+                            >
+                                {{ __('Document Categories') }}
+                            </flux:sidebar.item>
+
+                            <flux:sidebar.item icon="exclamation-triangle"
+                                href="{{ route('settings.request', ['type' => 'complaint']) }}" 
+                                :current="request()->routeIs('settings.request') && request('type') === 'complaint'"
+                                wire:navigate
+                            >
+                                {{ __('Complaint Case') }}
+                            </flux:sidebar.item>
+
+                            <flux:sidebar.item icon="chat-bubble-left-right"
+                                :href="route('admin.chatbot.faqs')"
+                                :current="request()->routeIs('admin.chatbot.faqs')"
+                                wire:navigate>
+                                {{ __('Chatbot FAQs') }}
                             </flux:sidebar.item>
                         </flux:sidebar.group>
 
@@ -88,11 +226,66 @@
                 @if(Auth::user()->role === 'official')
 
                         <flux:sidebar.item icon="home"
-                            :href="route('dashboard')"
-                            :current="request()->routeIs('dashboard')"
-                            wire:navigate>
+                            :href="route('official.dashboard')"
+                            :current="request()->routeIs('official.dashboard')"
+                            >
                             {{ __('Dashboard') }}
                         </flux:sidebar.item>
+
+                        <flux:sidebar.item
+                            href="{{ route('official.announcements.index') }}" 
+                            :current="request()->routeIs('official.announcements.*')"
+                            icon="megaphone"
+                            wire:navigate
+                        >
+                            Announcements
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.group expandable heading="Requests" class="grid" icon="inbox">
+
+                            <flux:sidebar.item
+                                href="{{ route('official.documents.index') }}" 
+                                :current="request()->routeIs('official.documents.*')"
+                                :badge="$pendingDocsCount > 0 ? $pendingDocsCount : null"
+                                icon="document-text"
+                                wire:navigate
+                            >
+                                Documents
+                            </flux:sidebar.item>
+
+                            <flux:sidebar.item
+                                href="{{ route('official.complaints.index') }}" 
+                                :current="request()->routeIs('official.complaints.*')"
+                                :badge="$pendingComplaintsCount > 0 ? $pendingComplaintsCount : null"
+                                icon="exclamation-triangle"
+                                wire:navigate
+                            >
+                                Complaints
+                            </flux:sidebar.item>
+
+                        </flux:sidebar.group>
+                        
+                        <flux:sidebar.group expandable heading="Residents" class="grid" icon="users">
+
+                            <flux:sidebar.item
+                                href="{{ route('official.residents.index') }}" 
+                                :current="Route::is('official.residents.index')"
+                                icon="user-group"
+                                wire:navigate
+                            >
+                                Resident List
+                            </flux:sidebar.item>
+
+                            <flux:sidebar.item
+                                href="{{ route('official.residents.household') }}" 
+                                :current="Route::is('official.residents.household')"
+                                icon="building-office-2"
+                                wire:navigate
+                            >
+                                Households 
+                            </flux:sidebar.item>
+
+                        </flux:sidebar.group>
 
                 @endif
 
@@ -106,24 +299,44 @@
                             {{ __('Dashboard') }}
                         </flux:sidebar.item>
 
-                        <flux:sidebar.item icon="inbox"
-                            :href="route('resident.requests.index')"
-                            :current="request()->routeIs('requests.index')"
+                        {{-- Add this inside the Resident section, right after their "Requests" group --}}
+
+                        <flux:sidebar.item icon="megaphone"
+                            :href="route('resident.announcements.index')"
+                            :current="request()->routeIs('resident.announcements.*')"
                             wire:navigate>
-                            {{ __('Requests') }}
-                        </flux:sidebar.item>    
+                            {{ __('Announcement') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.group expandable heading="Requests" class="grid" icon="inbox">
+
+                            <flux:sidebar.item
+                                href="{{ route('resident.requests.index', ['type' => 'documents']) }}" 
+                                :current="request()->routeIs('resident.requests.index') && request('type', 'documents') === 'documents'"
+                                :badge="($pendingDocs ?? 0) > 0 ? $pendingDocs : null"
+                                icon="document-text"
+                                wire:navigate
+                            >
+                                Documents
+                            </flux:sidebar.item>
+
+                            <flux:sidebar.item
+                                href="{{ route('resident.complaints.index', ['type' => 'complaints']) }}" 
+                                :current="request()->routeIs('resident.complaints.index') && request('type') === 'complaints'"
+                                :badge="($pendingComplaints ?? 0) > 0 ? $pendingComplaints : null"
+                                icon="exclamation-triangle"
+                                wire:navigate
+                            >
+                                Complaints
+                            </flux:sidebar.item>
+
+                        </flux:sidebar.group>
 
                 @endif
             </flux:sidebar.nav>
 
             <flux:sidebar.spacer />
-
-            <x-desktop-user-menu 
-                class="hidden lg:block" 
-                :name="auth()->user()->resident?->full_name ?? auth()->user()->name" 
-                :avatar="auth()->user()->profile_photo_url"
-                :initials="auth()->user()->initials()"
-            />
+                        
         </flux:sidebar>
 
         <flux:header class="bg-white lg:bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700 gap-4">
@@ -135,15 +348,35 @@
                 {{ $header ?? '' }}
             </div>
 
-            {{-- Dark Mode Toggle --}}
-            <flux:button x-data x-on:click="$flux.dark = ! $flux.dark" icon="moon" variant="subtle" aria-label="Toggle dark mode" />
+            <flux:button 
+                x-data 
+                x-on:click="$flux.appearance = $flux.dark ? 'light' : 'dark'" 
+                variant="subtle" 
+                square 
+                class="!bg-transparent hover:!bg-zinc-100 dark:hover:!bg-zinc-800 text-zinc-500 dark:text-zinc-400 border-none" 
+                aria-label="Toggle dark mode"
+            >
+                <flux:icon.sun x-show="$flux.dark" class="h-5 w-5" />
+                <flux:icon.moon x-show="! $flux.dark" class="h-5 w-5" />
+            </flux:button>
+
+            <livewire:notification-bell />
+
+            {{-- Safely wrapped in a hidden container for mobile --}}
+            <div class="hidden lg:block">
+                <x-desktop-user-menu 
+                    :name="auth()->user()->resident?->full_name ?? auth()->user()->name" 
+                    :avatar="auth()->user()->profile_photo_url"
+                    :initials="auth()->user()->getInitialsAttribute()"
+                />
+            </div>
 
             {{-- Mobile User Menu --}}
             <div class="lg:hidden flex shrink-0">
                 <flux:dropdown position="top" align="end">
                     <flux:profile 
                         :avatar="auth()->user()->profile_photo_url"
-                        :initials="auth()->user()->initials()" 
+                        :initials="auth()->user()->getInitialsAttribute()" 
                         icon-trailing="chevron-down" 
                     />
                     
@@ -154,7 +387,7 @@
                                     <flux:avatar 
                                         :src="auth()->user()->profile_photo_url"
                                         :name="auth()->user()->name" 
-                                        :initials="auth()->user()->initials()" 
+                                        :initials="auth()->user()->getInitialsAttribute()" 
                                     />
                                     
                                     
@@ -186,11 +419,63 @@
         </flux:header>
 
         {{-- Main Content Slot --}}
-        <flux:main class="flex h-[calc(100dvh-4rem)] w-full flex-1 flex-col gap-6 p-6 lg:p-8">
-            {{ $slot }}
+        <flux:main>
+            <div class="flex-1">
+                {{ $slot }}
+            </div>
 
-            @include('partials.footerDashboard')
+            {{-- mt-auto pushes the footer to the bottom of the flex container --}}
+            <div class="mt-auto pt-8">
+                @include('partials.footerDashboard')
+            </div>
         </flux:main>
+
+        @if(!auth()->check() || auth()->user()->role === 'resident')
+            <livewire:resident.floating-chat />
+        @elseif(auth()->check() && auth()->user()->role === 'admin')
+            <livewire:admin.chat-manager />
+        @endif
+
+        {{-- Free Custom Toast Notification --}}
+        <div x-data="{ show: false, message: '', title: '', type: 'success' }"
+             x-on:notify.window="
+                title = $event.detail.title;
+                message = $event.detail.message;
+                type = $event.detail.type || 'success';
+                show = true;
+                setTimeout(() => show = false, 3000);
+             "
+             x-show="show"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:translate-x-4"
+             x-transition:enter-end="opacity-100 translate-y-0 sm:translate-x-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             style="display: none;"
+             class="fixed bottom-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-4 shadow-lg dark:border-zinc-700 dark:bg-zinc-800"
+        >
+            <div class="flex items-start gap-3">
+                {{-- Success Icon --}}
+                <template x-if="type === 'success'">
+                    <flux:icon.check-circle class="h-6 w-6 text-green-500" />
+                </template>
+                
+                {{-- Danger Icon --}}
+                <template x-if="type === 'danger'">
+                    <flux:icon.x-circle class="h-6 w-6 text-red-500" />
+                </template>
+
+                <div>
+                    <h3 x-text="title" class="text-sm font-semibold text-zinc-900 dark:text-white"></h3>
+                    <p x-text="message" class="mt-1 text-sm text-zinc-500 dark:text-zinc-400"></p>
+                </div>
+                
+                <button @click="show = false" class="ml-auto text-zinc-400 hover:text-zinc-500">
+                    <flux:icon.x-mark class="h-5 w-5" />
+                </button>
+            </div>
+        </div>
 
         @fluxScripts
     </body>

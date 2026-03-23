@@ -19,14 +19,25 @@ return new class extends Migration
             $table->string('requestor_phone')->nullable();   // Contact Number
             $table->string('requestor_address')->nullable(); // Address (since they might not be in the system)
 
-            // Relationships
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('resident_id')->nullable()->constrained()->onDelete('cascade');
             $table->foreignId('document_type_id')->constrained()->onDelete('cascade');
+            $table->foreignId('assigned_official_id')->nullable()->constrained('users')->onDelete('set null'); 
+            $table->enum('mode_of_request', ['online', 'walk-in'])->default('online');
 
             $table->string('purpose'); // e.g., "For Employment"
-            $table->enum('status', ['pending', 'processing', 'ready_for_pickup', 'completed', 'rejected'])->default('pending');
+            $table->enum('status', ['pending', 'processing', 'pending_e_signature', 'ready_for_pickup', 'completed', 'rejected'])->default('pending');
             $table->text('remarks')->nullable(); // Admin notes (e.g., "Missing ID")
+            
+            $table->boolean('is_e_signed')->default(false);
+            $table->timestamp('approved_at')->nullable();
+
+            $table->string('control_number')->nullable();
+            $table->string('validity_period')->nullable();
+            $table->string('ordinance_number')->nullable();
+            $table->string('printed_name')->nullable();
             $table->timestamps();
+
         });
     }
 

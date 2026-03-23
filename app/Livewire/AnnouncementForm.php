@@ -7,6 +7,9 @@ use Livewire\WithFileUploads;
 use App\Models\Announcement;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use App\Models\User;
+use App\Notifications\SystemAlertNotification;
+use Illuminate\Support\Facades\Notification;
 
 class AnnouncementForm extends Component
 {
@@ -45,24 +48,43 @@ class AnnouncementForm extends Component
 
     public function save()
     {
-        $validated = $this->validate([
+        // Dynamic rules so validation doesn't fail if publish_at is hidden/empty
+        $rules = [
             'title' => 'required|string|max:255',
             'content' => 'required|string',
-            'status' => 'required|in:published,archived',
-            'publish_at' => 'nullable|date',
-            'expires_at' => 'nullable|date|after:publish_at',
+            'status' => 'required|in:draft,published,archived',
+            'expires_at' => 'nullable|date',
             'cover_image' => 'nullable|image|max:10240', // 10MB Max
-        ]);
+        ];
+
+        if ($this->status !== 'published') {
+            $rules['publish_at'] = 'nullable|date';
+            $rules['expires_at'] .= '|after:publish_at';
+        }
+
+        $validated = $this->validate($rules);
 
         // Base Data
         $data = [
             'title' => $this->title,
             'content' => $this->content,
             'status' => $this->status,
-            'publish_at' => $this->publish_at ?: null,
             'expires_at' => $this->expires_at ?: null,
-            'user_id' => auth()->id(),
         ];
+
+        // BUG FIX: Only set the author if this is a brand NEW announcement
+        if (!$this->announcement) {
+            $data['user_id'] = auth()->id();
+        }
+
+        // LOGIC FOR PUBLISH DATE: 
+        if ($this->status === 'published') {
+            // Keep the original publish date if editing, otherwise set to now
+            $data['publish_at'] = $this->announcement?->publish_at ?? now();
+        } else {
+            // Use manually entered date, or null
+            $data['publish_at'] = $this->publish_at ?: null;
+        }
 
         // Handle Image Upload
         if ($this->cover_image) {
@@ -73,18 +95,54 @@ class AnnouncementForm extends Component
             $data['cover_image'] = $this->cover_image->store('announcements', 'public');
         }
 
-        // Create or Update
+        // --- NEW LOGIC: Check if we need to notify ---
+        // Was it unpublished before this save? (Either it's new, or it wasn't published)
+        $wasNotPublished = !$this->announcement || $this->announcement->status !== 'published';
+        // Is it being published now?
+        $isNowPublished = $data['status'] === 'published';
+
+        // Create or Update (ONLY DO THIS ONCE)
         if ($this->announcement) {
             $this->announcement->update($data);
             $message = 'Announcement updated successfully.';
+            $savedAnnouncement = $this->announcement;
         } else {
-            // Slug is handled by the Model boot() method, no need to add here
-            Announcement::create($data);
+            $savedAnnouncement = Announcement::create($data);
             $message = 'Announcement created successfully.';
         }
 
+        // --- TRIGGER NOTIFICATION ---
+        if ($wasNotPublished && $isNowPublished) {
+            
+            // SYNTAX FIX: Chunk users to prevent memory exhaustion
+            User::where('id', '!=', auth()->id())->chunk(100, function ($users) use ($savedAnnouncement) {
+                
+                // Group the batch of users by their role. 
+                // NOTE: Adjust 'role' if your database column is named differently
+                $groupedUsers = $users->groupBy('role'); 
+
+                foreach ($groupedUsers as $role => $roleUsers) {
+                    
+                    // Dynamically generate the correct URL based on the role
+                    $actionUrl = match($role) {
+                        'admin'    => route('admin.announcements.show', $savedAnnouncement),
+                        'official' => route('official.announcements.show', $savedAnnouncement),
+                        // Fallback for residents
+                        default    => route('resident.announcements.index'), 
+                    };
+
+                    // Send the notification to this specific group with their matching URL
+                    Notification::send($roleUsers, new SystemAlertNotification(
+                        'New Announcement', 
+                        "The Barangay has posted a new announcement: " . $savedAnnouncement->title,
+                        $actionUrl
+                    ));
+                }
+            });
+        }
+
         session()->flash('success', $message);
-        return redirect()->route('announcements.index');
+        return redirect()->route('admin.announcements.index');
     }
 
     public function removeImage()
@@ -94,8 +152,9 @@ class AnnouncementForm extends Component
     
     public function removeExistingImage()
     {
-        if($this->announcement && $this->existing_image) {
-            Storage::disk('public')->delete($this->existing_image);
+        // SECURITY FIX: Rely on the DB to know what file to delete, not the frontend string
+        if($this->announcement && $this->announcement->cover_image) {
+            Storage::disk('public')->delete($this->announcement->cover_image);
             $this->announcement->update(['cover_image' => null]);
             $this->existing_image = null;
         }
@@ -103,6 +162,6 @@ class AnnouncementForm extends Component
 
     public function render()
     {
-        return view('livewire.announcement-form'); // Ensure this view exists
+        return view('livewire.announcement-form'); 
     }
 }

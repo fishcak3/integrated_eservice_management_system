@@ -3,36 +3,41 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\OfficialTerm;
+use App\Models\Resident;
+use App\Models\Position;
 
 class Official extends Model
 {
     protected $fillable = [
         'resident_id',
-        'user_id',
-        'position_id',
-        'date_start',
-        'date_end',
-        'is_active',
+        'e_signature_path',
     ];
 
-    protected $casts = [
-        'date_start' => 'date',
-        'date_end'   => 'date',
-        'is_active'  => 'boolean',
-    ];
+    public function terms()
+    {
+        return $this->hasMany(OfficialTerm::class);
+    }
+
+    public function currentTerm()
+    {
+        return $this->hasOne(OfficialTerm::class)
+            ->where('status', 'current')
+            ->latestOfMany('term_start');
+    }
 
     public function resident()
     {
         return $this->belongsTo(Resident::class);
     }
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
     public function position()
     {
-        return $this->belongsTo(Position::class);
+        return $this->hasOneThrough(Position::class, OfficialTerm::class, 'official_id', 'id', 'id', 'position_id')
+            ->where('official_terms.status', 'current');
     }
+        
 }

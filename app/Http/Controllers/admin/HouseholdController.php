@@ -1,0 +1,35 @@
+<?php
+
+namespace App\Http\Controllers\admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Resident;
+use App\Models\Household;
+use Illuminate\Http\Request;
+
+class HouseholdController extends Controller
+{
+    public function index(Request $request)
+    {
+        $households = Household::getHouseholdsPaginated($request->all());
+
+        return view('userdashboard.forAdmin.resident_mgt.house_hold.house_hold', compact('households'));
+    }
+
+    public function show($id)
+    {
+        $household = Household::with('members')->findOrFail($id);
+        
+        return view('userdashboard.forAdmin.resident_mgt.house_hold.show_house_hold', compact('household'));
+    }
+
+    public function destroy($id)
+    {
+        $household = Household::findOrFail($id);
+        
+        $household->delete();
+
+        return redirect()->route('admin.residents.household')
+                         ->with('success', 'Household successfully deleted.');
+    }
+}

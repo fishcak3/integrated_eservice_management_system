@@ -53,32 +53,53 @@
                     placeholder="email@example.com"
                 />
 
-                    <flux:input
-                        name="password"
-                        :label="__('Password')"
-                        type="password"
-                        required
-                        autocomplete="new-password"
-                        :placeholder="__('Password')"
-                        viewable
-                    />
+                <flux:input
+                    name="password"
+                    :label="__('Password')"
+                    type="password"
+                    required
+                    autocomplete="new-password"
+                    :placeholder="__('Password')"
+                    viewable
+                />
 
-                    <flux:input
-                        name="password_confirmation"
-                        :label="__('Confirm password')"
-                        type="password"
-                        required
-                        autocomplete="new-password"
-                        :placeholder="__('Confirm')"
-                        viewable
-                    />
+                <flux:input
+                    name="password_confirmation"
+                    :label="__('Confirm password')"
+                    type="password"
+                    required
+                    autocomplete="new-password"
+                    :placeholder="__('Confirm')"
+                    viewable
+                />
             </div>
 
-            <div class="flex items-center justify-end mt-2">
+            {{-- Wrapped in a flex-col so the error appears directly below the checkbox --}}
+            <div class="flex flex-col gap-2">
+                <div class="flex items-center gap-3">
+                    <flux:checkbox name="agree_terms" id="agree_terms" required />
+                    
+                    <label for="agree_terms" class="text-sm text-zinc-600 dark:text-zinc-400 cursor-pointer">
+                        I agree to the 
+                        <flux:modal.trigger name="terms-modal">
+                            <span class="text-green-600 hover:text-green-700 hover:underline font-medium cursor-pointer">Terms of Service</span>
+                        </flux:modal.trigger>
+                        and 
+                        <flux:modal.trigger name="privacy-modal">
+                            <span class="text-green-600 hover:text-green-700 hover:underline font-medium cursor-pointer">Privacy Policy</span>
+                        </flux:modal.trigger>.
+                    </label>
+                </div>
+                
+                {{-- This tells Flux exactly where to render your custom Fortify error --}}
+                <flux:error name="agree_terms" />
+            </div>
+
+            <div class="flex items-center justify-end mt-2" cursor="pointer">
                 <flux:button type="submit" variant="primary" class="w-full" data-test="register-user-button">
                     {{ __('Create account') }}
                 </flux:button>
-            </div>
+            </div>  
         </form>
 
         <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-600 dark:text-zinc-400">

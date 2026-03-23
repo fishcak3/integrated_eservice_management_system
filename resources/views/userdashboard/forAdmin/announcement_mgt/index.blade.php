@@ -1,75 +1,146 @@
 <x-layouts::app :title="__('Announcements')">
 
     <x-slot:header>
-        <flux:navbar scrollable>
-            <flux:navbar.item 
-                href="{{ route('announcements.index') }}" 
-                :current="request()->routeIs('announcements.index')"
-                icon="newspaper"
-                wire:navigate
-            >
-                Notices
-            </flux:navbar.item>
-        </flux:navbar>
+        <flux:breadcrumbs class="mb-2">
+            <flux:breadcrumbs.item>Announcements</flux:breadcrumbs.item>
+            <flux:breadcrumbs.item href="{{ route('admin.announcements.index') }}">All Announcements</flux:breadcrumbs.item>
+        </flux:breadcrumbs>
     </x-slot:header>
 
-    <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl p-0">
+    {{-- MAIN CONTENT --}}
+    <div x-data="{
+            cols: {
+                title: true,
+                status: true,
+                publish: true,
+                expiry: true
+            }
+         }" 
+         class="flex h-full w-full flex-1 flex-col gap-6 p-0">
         
-        {{-- Header & Toolbar --}}
+        {{-- Top Header Area --}}
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <flux:heading size="lg">Announcements</flux:heading>
-                <flux:subheading>Manage news, updates, and emergency alerts.</flux:subheading>
+                <flux:heading size="xl" class="font-bold">Announcements</flux:heading>
+                <flux:subheading class="text-zinc-500 dark:text-zinc-400">Manage news, updates, and emergency alerts.</flux:subheading>
             </div>
-            <flux:button href="{{ route('announcements.create') }}" variant="primary" icon="plus">
-                New Announcement
-            </flux:button>
+            
+            <div class="flex gap-2">
+                <flux:button href="{{ route('admin.announcements.create') }}" variant="primary" icon="plus">
+                    New Announcement
+                </flux:button>
+            </div>
         </div>
 
-        <flux:card class="flex-1 p-0 overflow-hidden">
-            {{-- Search Bar --}}
-            <div class="p-4 border-b border-zinc-200 dark:border-zinc-700">
-                <form method="GET">
-                    <flux:input name="search" value="{{ request('search') }}" icon="magnifying-glass" placeholder="Search titles..." class="max-w-sm" />
-                </form>
+        {{-- Master Form for Filters & Search --}}
+        <form method="GET" action="{{ url()->current() }}" class="flex flex-col gap-4">
+            {{-- Announcement Filters --}}
+            <div class="flex flex-wrap items-center gap-2">
+                
+                {{-- Date Added Range Filter Dropdown --}}
+                <flux:dropdown>
+                    <flux:badge as="button" rounded color="{{ request('date_from') || request('date_to') ? 'blue' : 'zinc' }}" icon="calendar" size="lg" class="cursor-pointer">
+                        Date Range
+                    </flux:badge>
+                        
+                    <flux:menu class="p-4 w-auto min-w-[320px] space-y-4">
+                        <flux:heading size="sm" class="mb-2">Filter Date Range</flux:heading>
+                            
+                        <div class="flex flex-col gap-4 sm:flex-row">
+                            <div class="flex-1">
+                                <flux:input type="date" label="From Date" name="date_from" value="{{ request('date_from') }}" />
+                            </div>
+                                
+                            <div class="flex-1">
+                                <flux:input type="date" label="To Date" name="date_to" value="{{ request('date_to') }}" />
+                            </div>
+                        </div>
+                        <div class="pt-2">
+                            <flux:button type="submit" variant="primary" size="sm" class="w-full">Apply Filters</flux:button>
+                        </div>
+                    </flux:menu>
+                </flux:dropdown>
+
+                {{-- Clear Filters --}}
+                @if(request()->hasAny(['search', 'date_from', 'date_to']) && array_filter(request()->only(['search', 'date_from', 'date_to'])))
+                    <flux:button href="{{ route('admin.announcements.index') }}" size="sm" variant="subtle" icon="x-mark">
+                        Clear
+                    </flux:button>
+                @endif
             </div>
 
-            {{-- Table --}}
-            <flux:table :paginate="$announcements">
+            {{-- Toolbar: Search & Actions --}}
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                {{-- Search Input --}}
+                <div class="flex-1 max-w-sm">
+                    <flux:input 
+                        name="search" 
+                        value="{{ request('search') }}" 
+                        icon="magnifying-glass" 
+                        placeholder="Search titles..." 
+                        class="w-full bg-transparent dark:bg-zinc-900/50"
+                        onchange="this.form.submit()"
+                    />
+                </div>
+
+                <div class="flex items-center gap-2">
+                    {{-- Columns Toggle Dropdown --}}
+                    <flux:dropdown>
+                        <flux:button cursor="pointer" variant="subtle" icon="adjustments-horizontal">Columns</flux:button>
+                        <flux:menu class="w-56 p-3 space-y-2">
+                            <flux:heading size="sm" class="mb-2">Toggle columns</flux:heading>
+                            {{-- We add x-on:change.stop here so checking these doesn't submit the filter form --}}
+                            <flux:checkbox x-model="cols.title" label="Title" x-on:change.stop />
+                            <flux:checkbox x-model="cols.status" label="Status" x-on:change.stop />
+                            <flux:checkbox x-model="cols.publish" label="Publish Date" x-on:change.stop />
+                            <flux:checkbox x-model="cols.expiry" label="Expiry Date" x-on:change.stop />
+                        </flux:menu>
+                    </flux:dropdown>
+                </div>
+            </div>
+        </form>
+
+        {{-- Table Container --}}
+        <div class="border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden">
+            <flux:table class="whitespace-nowrap bg-transparent">
                 <flux:table.columns>
-                    <flux:table.column>Title</flux:table.column>
-                    <flux:table.column>Status</flux:table.column>
-                    <flux:table.column>Publish Date</flux:table.column> {{-- Changed from Priority --}}
-                    <flux:table.column align="end">Actions</flux:table.column>
+                    {{-- Checkbox Column --}}
+                    <flux:table.column align="center">
+                        <flux:checkbox />
+                    </flux:table.column>
+
+                    <flux:table.column x-show="cols.title">Title</flux:table.column>
+                    <flux:table.column x-show="cols.status">Status</flux:table.column>
+                    <flux:table.column x-show="cols.publish">Publish Date</flux:table.column>
+                    <flux:table.column x-show="cols.expiry">Expiry/Archive Date</flux:table.column>
+                    <flux:table.column align="end"></flux:table.column>
                 </flux:table.columns>
 
                 <flux:table.rows>
                     @forelse($announcements as $item)
-                        <flux:table.row :key="$item->id">
-                            {{-- Title & Image --}}
-                            <flux:table.cell>
-                                <div class="flex items-center gap-3">
-                                    @if($item->cover_image)
-                                        <div class="h-10 w-10 rounded bg-zinc-100 dark:bg-zinc-800 bg-cover bg-center shrink-0" 
-                                             style="background-image: url('{{ Storage::url($item->cover_image) }}')">
-                                        </div>
-                                    @else
-                                        <div class="flex h-10 w-10 items-center justify-center rounded bg-zinc-100 dark:bg-zinc-800 shrink-0">
-                                            <flux:icon name="newspaper" class="text-zinc-400" size="sm" />
-                                        </div>
-                                    @endif
-                                    
-                                    <div class="flex flex-col">
-                                        <span class="font-medium truncate max-w-[200px]">{{ $item->title }}</span>
-                                    </div>
+                        {{-- Added cursor-pointer and onclick to the row --}}
+                        <flux:table.row 
+                            :key="$item->id"
+                            class="hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors cursor-pointer"
+                            onclick="window.location.href='{{ route('admin.announcements.show', $item) }}'"
+                        >
+                            {{-- Row Checkbox --}}
+                            <flux:table.cell onclick="event.stopPropagation()">
+                                <div class="flex justify-center">
+                                    <flux:checkbox />
                                 </div>
                             </flux:table.cell>
 
+                            {{-- Title --}}
+                            <flux:table.cell x-show="cols.title">
+                                <span class="font-medium capitalize text-gray-900 dark:text-white truncate max-w-[200px]">{{ $item->title }}</span>
+                            </flux:table.cell>
+
                             {{-- Status Badge --}}
-                            <flux:table.cell>
+                            <flux:table.cell x-show="cols.status">
                                 @php
                                     $statusColor = match($item->status) {
-                                        'published' => 'green',
+                                        'published' => 'emerald',
                                         'archived' => 'zinc',
                                         default => 'zinc',
                                     };
@@ -82,46 +153,71 @@
                                         $statusLabel = ucfirst($item->status);
                                     }
                                 @endphp
-                                <flux:badge :color="$statusColor" size="sm" inset="top bottom">{{ $statusLabel }}</flux:badge>
+                                <flux:badge rounded color="{{ $statusColor }}" size="sm" class="rounded-full px-2.5">
+                                    {{ $statusLabel }}
+                                </flux:badge>
                             </flux:table.cell>
 
-                            {{-- Dates (Replaces Priority) --}}
-                            <flux:table.cell>
-                                <div class="flex flex-col">
-                                    <span class="text-sm font-medium">
-                                        {{ $item->publish_at ? $item->publish_at->format('M d, Y') : 'Draft' }}
-                                    </span>
-                                    @if($item->expires_at)
-                                        <span class="text-xs text-zinc-500">
-                                            Exp: {{ $item->expires_at->format('M d, Y') }}
-                                        </span>
-                                    @endif
-                                </div>
+                            {{-- Publish Date --}}
+                            <flux:table.cell x-show="cols.publish" class="text-zinc-600 dark:text-zinc-300">
+                                {{ $item->publish_at ? $item->publish_at->format('M d, Y') : 'Draft' }}
                             </flux:table.cell>
 
-                            {{-- Actions --}}
-                            <flux:table.cell align="end">
+                            {{-- Expiry Date --}}
+                            <flux:table.cell x-show="cols.expiry" class="text-zinc-600 dark:text-zinc-300">
+                                {{ $item->expires_at ? $item->expires_at->format('M d, Y') : 'No Expiry' }}
+                            </flux:table.cell>
+
+                            {{-- Actions (Added event.stopPropagation() so clicking the menu doesn't trigger the row click) --}}
+                            <flux:table.cell align="end" onclick="event.stopPropagation()">
                                 <flux:dropdown>
-                                    <flux:button icon="ellipsis-horizontal" size="xs" variant="ghost" />
+                                    <flux:button icon="ellipsis-horizontal" size="sm" variant="ghost" class="text-zinc-400 hover:text-white" />
                                     <flux:menu>
-                                        <flux:menu.item href="{{ route('announcements.show', $item) }}" icon="eye">View</flux:menu.item>
-                                        <flux:menu.item href="{{ route('announcements.edit', $item) }}" icon="pencil-square">Edit</flux:menu.item>
+                                        <flux:menu.item href="{{ route('admin.announcements.show', $item) }}" icon="eye">View Details</flux:menu.item>
+                                        <flux:menu.item href="{{ route('admin.announcements.edit', $item) }}" icon="pencil-square">Edit</flux:menu.item>
                                         <flux:menu.separator />
-                                        <form action="{{ route('announcements.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this?');">
-                                            @csrf @method('DELETE')
-                                            <flux:menu.item type="submit" icon="trash" class="text-red-600">Delete</flux:menu.item>
-                                        </form>
+                                        
+                                        <flux:modal.trigger name="delete-announcement-{{ $item->id }}">
+                                            <flux:menu.item icon="trash" variant="danger" class="cursor-pointer">
+                                                Delete
+                                            </flux:menu.item>
+                                        </flux:modal.trigger>
                                     </flux:menu>
                                 </flux:dropdown>
                             </flux:table.cell>
                         </flux:table.row>
                     @empty
                         <flux:table.row>
-                            <flux:table.cell colspan="4" class="text-center text-zinc-500 py-6">No announcements found.</flux:table.cell>
+                            <flux:table.cell colspan="6" class="text-center text-zinc-500 py-8">
+                                No announcements found.
+                            </flux:table.cell>
                         </flux:table.row>
                     @endforelse
                 </flux:table.rows>
             </flux:table>
-        </flux:card>
+
+            {{-- Pagination Footer --}}
+            <div class="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-transparent">
+                {{ $announcements->links() }}
+            </div>
+        </div>
     </div>
+
+    {{-- Render all Modals safely outside the table --}}
+    @foreach($announcements as $item)
+        <form action="{{ route('admin.announcements.destroy', $item) }}" method="POST">
+            @csrf 
+            @method('DELETE')
+
+            <x-confirm-modal 
+                name="delete-announcement-{{ $item->id }}" 
+                title="Delete Announcement" 
+                confirmText="Yes, Delete" 
+                confirmVariant="danger"
+            >
+                This will permanently delete "<strong>{{ $item->title }}</strong>". This action cannot be undone. Are you sure?
+            </x-confirm-modal>
+        </form>
+    @endforeach
+
 </x-layouts::app>

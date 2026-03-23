@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Position;
@@ -16,7 +16,7 @@ class PositionController extends Controller
             })
             ->paginate(10);
 
-        return view('userdashboard.forAdmin.official_mgt.index', compact('positions'));
+        return view('userdashboard.forAdmin.official_mgt.position_mgt.posIndex', compact('positions'));
     }
 
     public function create()
@@ -31,11 +31,13 @@ class PositionController extends Controller
             'description' => 'nullable|string',
             'max_members' => 'required|integer|min:1',
         ]);
+        
         $validated['is_active'] = true;
 
         Position::create($validated);
 
-        return redirect()->route('positions.posIndex')->with('success', 'Position created successfully!');
+        return redirect()->route('positions.posIndex')
+            ->with('success', 'Position created successfully!');
     }
 
     public function edit($id)
@@ -63,12 +65,13 @@ class PositionController extends Controller
             ->with('success', 'Position updated successfully!');
     }
 
-    public function destroy(Position $position)
+    // FIXED: Changed parameter to $id to match the findOrFail call and keep consistency with edit/update
+    public function destroy($id)
     {
         $position = Position::findOrFail($id);
         $position->delete();
         
-        return redirect()->route('positions.posIndex')->with('success', 'Position deleted successfully.');
+        return redirect()->route('positions.posIndex')
+            ->with('success', 'Position deleted successfully.');
     }
-    
 }

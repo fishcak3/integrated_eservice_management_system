@@ -5,27 +5,41 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\User;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Announcement extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivity;
 
     protected $fillable = [
-        'title', 
-        'slug', 
-        'content', 
-        'cover_image', 
-        'status', 
-        'publish_at', 
-        'expires_at', 
-        'user_id'
+        'title',
+        'slug',
+        'content',
+        'cover_image',
+        'status',
+        'publish_at',
+        'expires_at',
+        'user_id',
+        'republished_by',
+        'republished_at',
     ];
 
     protected $casts = [
         'publish_at' => 'datetime',
         'expires_at' => 'datetime',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => "Announcement {$eventName}");
+    }
 
     public function getRouteKeyName()
     {
@@ -66,6 +80,11 @@ class Announcement extends Model
     public function author()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function republisher()
+    {
+        return $this->belongsTo(User::class, 'republished_by');
     }
 
 }

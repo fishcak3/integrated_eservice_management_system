@@ -46,14 +46,6 @@ class DocumentTypeSeeder extends Seeder
                 'updated_at' => $now,
             ],
             [
-                'name' => 'Barangay ID',
-                'fee' => 100.00,
-                'requirements' => "1. 1x1 ID Picture\n2. Proof of Residency",
-                'is_active' => true,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            [
                 'name' => 'Certificate of Good Moral Character',
                 'fee' => 50.00,
                 'requirements' => "1. Police Clearance (optional)\n2. Valid ID",
